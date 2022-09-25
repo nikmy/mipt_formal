@@ -1,7 +1,11 @@
 package tools
 
-func NewSet[T comparable]() Set[T] {
-    return make(Set[T])
+func NewSet[T comparable](keys ...T) Set[T] {
+    s := make(Set[T])
+    for _, key := range keys {
+        s.Insert(key)
+    }
+    return s
 }
 
 type Set[T comparable] map[T]struct{}

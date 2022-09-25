@@ -14,49 +14,49 @@ func TestFiniteStateMachine_DOA(t *testing.T) {
 
     type testcase struct {
         name     string
-        machine  finiteStateMachine
+        machine  NFA
         expected string
     }
 
     cases := [...]testcase{
         {
             name: "the only state",
-            machine: finiteStateMachine{
-                delta: map[State]transitions{1: nil},
-                start: []State{1},
-                final: []State{1},
+            machine: NFA{
+                delta: []transitions{0: nil},
+                start: []State{0},
+                final: []State{0},
             },
-            expected: doa.Version + fmt.Sprintf(doa.StartFormat, 1) +
-                    fmt.Sprintf(doa.AcceptanceFormat, 1) + doa.Begin +
-                    fmt.Sprintf(doa.StateFormat, 1) + doa.End,
+            expected: doa.Version + fmt.Sprintf(doa.StartFormat, 0) +
+                    fmt.Sprintf(doa.AcceptanceFormat, 0) + doa.Begin +
+                    fmt.Sprintf(doa.StateFormat, 0) + doa.End,
         },
         {
             name: "one edge",
-            machine: finiteStateMachine{
-                delta: map[State]transitions{
-                    1: map[Word]State{"a": 1},
+            machine: NFA{
+                delta: []transitions{
+                    0: map[Word][]State{"a": {0}},
                 },
-                start: []State{1},
-                final: []State{1},
+                start: []State{0},
+                final: []State{0},
             },
-            expected: doa.Version + fmt.Sprintf(doa.StartFormat, 1) +
-                    fmt.Sprintf(doa.AcceptanceFormat, 1) + doa.Begin +
-                    fmt.Sprintf(doa.StateFormat, 1) +
-                    fmt.Sprintf(doa.EdgeFormat, "a", 1) + doa.End,
+            expected: doa.Version + fmt.Sprintf(doa.StartFormat, 0) +
+                    fmt.Sprintf(doa.AcceptanceFormat, 0) + doa.Begin +
+                    fmt.Sprintf(doa.StateFormat, 0) +
+                    fmt.Sprintf(doa.EdgeFormat, "a", 0) + doa.End,
         },
         {
             name: "epsilon transition",
-            machine: finiteStateMachine{
-                delta: map[State]transitions{
-                    1: map[Word]State{"": 1},
+            machine: NFA{
+                delta: []transitions{
+                    0: map[Word][]State{"": {0}},
                 },
-                start: []State{1},
-                final: []State{1},
+                start: []State{0},
+                final: []State{0},
             },
-            expected: doa.Version + fmt.Sprintf(doa.StartFormat, 1) +
-                    fmt.Sprintf(doa.AcceptanceFormat, 1) + doa.Begin +
-                    fmt.Sprintf(doa.StateFormat, 1) +
-                    fmt.Sprintf(doa.EdgeFormat, doa.Epsilon, 1) + doa.End,
+            expected: doa.Version + fmt.Sprintf(doa.StartFormat, 0) +
+                    fmt.Sprintf(doa.AcceptanceFormat, 0) + doa.Begin +
+                    fmt.Sprintf(doa.StateFormat, 0) +
+                    fmt.Sprintf(doa.EdgeFormat, doa.Epsilon, 0) + doa.End,
         },
     }
 

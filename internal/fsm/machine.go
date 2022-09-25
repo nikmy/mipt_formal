@@ -3,59 +3,31 @@ package fsm
 import (
     "fmt"
     "mipt_formal/internal/doa"
-    "mipt_formal/internal/tools"
     "strings"
 )
 
-func New() *finiteStateMachine {
-    panic("not implemented")
+func NewNFA(start []State, final []State, edges []Transition) *NFA {
+    d := make([]transitions, 0, len(edges)) // TODO
+    return &NFA{
+        delta: d,
+        start: start,
+        final: final,
+    }
 }
 
-type transitions map[Word]State
+type transitions map[Word][]State
 
-type finiteStateMachine struct {
-    delta map[State]transitions
+type NFA struct {
+    delta []transitions
     start []State
     final []State
 }
 
-func (m *finiteStateMachine) Equal(other *finiteStateMachine) bool {
-    checkSet := tools.NewSet[State]()
-    for _, s := range m.start {
-        checkSet.Insert(s)
-    }
-    for _, s := range other.start {
-        if !checkSet.Has(s) {
-            return false
-        }
-    }
-
-    checkSet = tools.NewSet[State]()
-    for _, s := range m.final {
-        checkSet.Insert(s)
-    }
-    for _, s := range other.final {
-        if !checkSet.Has(s) {
-            return false
-        }
-    }
-
-    for s, t := range other.delta {
-        check, ok := m.delta[s]
-        if !ok {
-            return false
-        }
-        for word, to := range t {
-            checkTo, ok := check[word]
-            if !ok || checkTo != to {
-                return false
-            }
-        }
-    }
-    return true
+func (m *NFA) Equal(other *NFA) bool {
+    panic("not implemented")
 }
 
-func (m *finiteStateMachine) DOA() string {
+func (m *NFA) DOA() string {
     var b strings.Builder
     b.Grow(doa.MinimalLength)
 
@@ -81,11 +53,13 @@ func (m *finiteStateMachine) DOA() string {
 
     for s, t := range m.delta {
         b.WriteString(fmt.Sprintf(doa.StateFormat, s))
-        for word, state := range t {
-            if word == "" {
-                word = doa.Epsilon
+        for word, states := range t {
+            for _, state := range states {
+                if word == "" {
+                    word = doa.Epsilon
+                }
+                b.WriteString(fmt.Sprintf(doa.EdgeFormat, word, state))
             }
-            b.WriteString(fmt.Sprintf(doa.EdgeFormat, word, state))
         }
     }
 
@@ -93,6 +67,6 @@ func (m *finiteStateMachine) DOA() string {
     return b.String()
 }
 
-func (m *finiteStateMachine) Go(s State, w Word) []State {
+func (m *NFA) Go(s State, w Word) []State {
     panic("not implemented")
 }
