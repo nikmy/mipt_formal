@@ -3,6 +3,7 @@ package fsm
 import (
     "fmt"
     "mipt_formal/internal/doa"
+    "mipt_formal/internal/tools"
     "strings"
 )
 
@@ -16,6 +17,42 @@ type finiteStateMachine struct {
     delta map[State]transitions
     start []State
     final []State
+}
+
+func (m *finiteStateMachine) Equal(other *finiteStateMachine) bool {
+    checkSet := tools.NewSet[State]()
+    for _, s := range m.start {
+        checkSet.Insert(s)
+    }
+    for _, s := range other.start {
+        if !checkSet.Has(s) {
+            return false
+        }
+    }
+
+    checkSet = tools.NewSet[State]()
+    for _, s := range m.final {
+        checkSet.Insert(s)
+    }
+    for _, s := range other.final {
+        if !checkSet.Has(s) {
+            return false
+        }
+    }
+
+    for s, t := range other.delta {
+        check, ok := m.delta[s]
+        if !ok {
+            return false
+        }
+        for word, to := range t {
+            checkTo, ok := check[word]
+            if !ok || checkTo != to {
+                return false
+            }
+        }
+    }
+    return true
 }
 
 func (m *finiteStateMachine) DOA() string {
