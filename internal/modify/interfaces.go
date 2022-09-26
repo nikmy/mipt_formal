@@ -1,5 +1,5 @@
 package modify
 
-import "mipt_formal/internal/fsm"
+import "mipt_formal/internal/nfa"
 
-type Modifier func(fsm.Machine) (fsm.Machine, error)
+type Modifier func(*nfa.Machine)

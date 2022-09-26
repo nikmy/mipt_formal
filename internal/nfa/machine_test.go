@@ -1,4 +1,4 @@
-package fsm
+package nfa
 
 import (
     "fmt"
@@ -14,17 +14,17 @@ func TestFiniteStateMachine_DOA(t *testing.T) {
 
     type testcase struct {
         name     string
-        machine  NFA
+        machine  Machine
         expected string
     }
 
     cases := [...]testcase{
         {
             name: "the only state",
-            machine: NFA{
-                delta: []transitions{0: nil},
-                start: []State{0},
-                final: []State{0},
+            machine: Machine{
+                Delta: []transitions{0: nil},
+                Start: []State{0},
+                Final: []State{0},
             },
             expected: doa.Version + fmt.Sprintf(doa.StartFormat, 0) +
                     fmt.Sprintf(doa.AcceptanceFormat, 0) + doa.Begin +
@@ -32,12 +32,12 @@ func TestFiniteStateMachine_DOA(t *testing.T) {
         },
         {
             name: "one edge",
-            machine: NFA{
-                delta: []transitions{
+            machine: Machine{
+                Delta: []transitions{
                     0: map[Word][]State{"a": {0}},
                 },
-                start: []State{0},
-                final: []State{0},
+                Start: []State{0},
+                Final: []State{0},
             },
             expected: doa.Version + fmt.Sprintf(doa.StartFormat, 0) +
                     fmt.Sprintf(doa.AcceptanceFormat, 0) + doa.Begin +
@@ -46,12 +46,12 @@ func TestFiniteStateMachine_DOA(t *testing.T) {
         },
         {
             name: "epsilon transition",
-            machine: NFA{
-                delta: []transitions{
+            machine: Machine{
+                Delta: []transitions{
                     0: map[Word][]State{"": {0}},
                 },
-                start: []State{0},
-                final: []State{0},
+                Start: []State{0},
+                Final: []State{0},
             },
             expected: doa.Version + fmt.Sprintf(doa.StartFormat, 0) +
                     fmt.Sprintf(doa.AcceptanceFormat, 0) + doa.Begin +

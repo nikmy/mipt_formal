@@ -1,7 +1,7 @@
 package regex
 
-import "mipt_formal/internal/fsm"
+import "mipt_formal/internal/nfa"
 
 type Compiler interface {
-    Compile(expr string) (fsm.Machine, error)
+    Compile(expr string) (*nfa.Machine, error)
 }

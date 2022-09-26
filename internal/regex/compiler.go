@@ -5,7 +5,7 @@ import (
     "fmt"
     "strings"
 
-    "mipt_formal/internal/fsm"
+    "mipt_formal/internal/nfa"
     "mipt_formal/internal/tools"
 )
 
@@ -15,7 +15,7 @@ func NewCompiler() Compiler {
 
 type compiler struct{}
 
-func (c compiler) Compile(expr string) (fsm.Machine, error) {
+func (c compiler) Compile(expr string) (*nfa.Machine, error) {
     re, err := c.postfix(expr)
     if err != nil {
         return nil, fmt.Errorf("regexp parsing error: %w", err)
@@ -34,8 +34,8 @@ func (c compiler) Compile(expr string) (fsm.Machine, error) {
             f1 := fragments.Pop()
             f2 := fragments.Pop()
 
-            start = NewIntrusiveState(fsm.Epsilon, f1.Start, f2.Start)
-            accept = NewIntrusiveState(fsm.Epsilon)
+            start = NewIntrusiveState(nfa.Epsilon, f1.Start, f2.Start)
+            accept = NewIntrusiveState(nfa.Epsilon)
 
             f1.Accept.precede(accept)
             f2.Accept.precede(accept)
@@ -45,7 +45,7 @@ func (c compiler) Compile(expr string) (fsm.Machine, error) {
             }
 
             f := fragments.Pop()
-            start = NewIntrusiveState(fsm.Epsilon, f.Start, f.Accept)
+            start = NewIntrusiveState(nfa.Epsilon, f.Start, f.Accept)
             f.Accept.precede(start)
             accept = f.Accept
         case oneOrMore:
@@ -58,8 +58,8 @@ func (c compiler) Compile(expr string) (fsm.Machine, error) {
             start, accept = f.Start, f.Accept
         default:
             // hack: accept is always epsilon-labeled
-            accept = NewIntrusiveState(fsm.Epsilon)
-            start = NewIntrusiveState(fsm.Word(sym), accept)
+            accept = NewIntrusiveState(nfa.Epsilon)
+            start = NewIntrusiveState(nfa.Word(sym), accept)
         }
 
         fragments.Push(fragment{
@@ -81,8 +81,8 @@ func (c compiler) Compile(expr string) (fsm.Machine, error) {
     return c.fragmentToMachine(fragments.Pop()), nil
 }
 
-func (compiler) fragmentToMachine(f fragment) fsm.Machine {
-    return fsm.NewNFA(RunDFSWalker(f.Start, f.Accept))
+func (compiler) fragmentToMachine(f fragment) *nfa.Machine {
+    return nfa.New(RunDFSWalker(f.Start, f.Accept))
 }
 
 func (compiler) postfix(infix string) (string, error) { // TODO: bug

@@ -1,12 +1,15 @@
-package fsm
+package nfa
 
 import (
     "fmt"
     "mipt_formal/internal/doa"
+    "mipt_formal/internal/tools"
     "strings"
 )
 
-func NewNFA(start []State, final []State, edges []Transition) *NFA {
+type transitions map[Word]tools.Set[State]
+
+func New(start []State, final []State, edges []Transition) *Machine {
     nStates := 0
     for _, t := range edges {
         if int(t.From) >= nStates {
@@ -16,52 +19,63 @@ func NewNFA(start []State, final []State, edges []Transition) *NFA {
             nStates = int(t.To) + 1
         }
     }
+
     d := make([]transitions, nStates)
+    for s := State(0); s < State(nStates); s++ {
+        d[s] = nil
+    }
+
     for _, t := range edges {
         if d[t.From] == nil {
-            d[t.From] = make(map[Word][]State, 1)
+            d[t.From] = make(transitions, 1)
         }
         if d[t.From][t.By] == nil {
-            d[t.From][t.By] = make([]State, 0, 1)
+            d[t.From][t.By] = make(tools.Set[State])
         }
-        d[t.From][t.By] = append(d[t.From][t.By], t.To)
+        d[t.From][t.By].Insert(t.To)
     }
-    return &NFA{
-        delta: d,
-        start: start,
-        final: final,
+
+    return &Machine{
+        Delta: d,
+        Start: start,
+        Final: final,
     }
 }
 
-type transitions map[Word][]State
-
-type NFA struct {
-    delta []transitions
-    start []State
-    final []State
+type Machine struct {
+    Delta []transitions
+    Start []State
+    Final []State
 }
 
-func (m *NFA) Equal(other *NFA) bool {
-    panic("not implemented")
+func (m *Machine) AddTransition(from State, to State, by Word) bool {
+    if _, has := m.Delta[from][by]; !has {
+        m.Delta[from][by] = tools.NewSet[State]()
+    }
+    return m.Delta[from][by].Insert(to)
 }
 
-func (m *NFA) DOA() string {
+func (m *Machine) MarkAsFinal(state State) {
+    m.Final = append(m.Final, state)
+}
+
+func (m *Machine) DOA() string {
     var b strings.Builder
     b.Grow(doa.MinimalLength)
 
     b.WriteString(doa.Version)
 
-    starts := fmt.Sprintf("%v", m.start[0])
-    if len(m.start) > 1 {
-        for _, s := range m.start[1:] {
+    starts := fmt.Sprintf("%v", m.Start[0])
+    if len(m.Start) > 1 {
+        for _, s := range m.Start[1:] {
             starts += fmt.Sprintf(doa.StateConj+"%v", s)
         }
     }
     b.WriteString(fmt.Sprintf(doa.StartFormat, starts))
 
-    finals := fmt.Sprintf("%v", m.final[0])
-    if len(m.final) > 1 {
-        for _, f := range m.final[1:] {
+    finals := fmt.Sprintf("%v", m.Final[0])
+    if len(m.Final) > 1 {
+        for _, f := range m.Final[1:] {
             finals += fmt.Sprintf(doa.StateConj+"%v", f)
         }
     }
@@ -69,10 +83,10 @@ func (m *NFA) DOA() string {
 
     b.WriteString(doa.Begin)
 
-    for s, t := range m.delta {
+    for s, t := range m.Delta {
         b.WriteString(fmt.Sprintf(doa.StateFormat, s))
         for word, states := range t {
-            for _, state := range states {
+            for state := range states {
                 if word == Epsilon {
                     word = doa.Epsilon
                 }
@@ -85,6 +99,6 @@ func (m *NFA) DOA() string {
     return b.String()
 }
 
-func (m *NFA) Go(s State, w Word) []State {
+func (m *Machine) Go(s State, w Word) []State {
     panic("not implemented")
 }

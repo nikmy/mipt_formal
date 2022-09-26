@@ -1,8 +1,8 @@
 package regex
 
-import "mipt_formal/internal/fsm"
+import "mipt_formal/internal/nfa"
 
-func NewIntrusiveState(label fsm.Word, next ...*IntrusiveState) *IntrusiveState {
+func NewIntrusiveState(label nfa.Word, next ...*IntrusiveState) *IntrusiveState {
     if len(next) == 0 {
         next = nil
     }
@@ -13,7 +13,7 @@ func NewIntrusiveState(label fsm.Word, next ...*IntrusiveState) *IntrusiveState 
 }
 
 type IntrusiveState struct {
-    label fsm.Word
+    label nfa.Word
     next  []*IntrusiveState
 }
 

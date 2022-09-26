@@ -1,4 +1,4 @@
-package fsm
+package nfa
 
 type State uint64
 type Word string
