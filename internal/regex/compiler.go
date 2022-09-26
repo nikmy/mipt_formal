@@ -94,10 +94,15 @@ func (compiler) postfix(infix string) (string, error) { // TODO: bug
         case lBracket:
             ops.Push(cur)
         case rBracket:
-            for ops.Pop() != lBracket {
+            for {
                 if ops.Empty() {
                     return "", errors.New("invalid parentheses")
                 }
+                op := ops.Pop()
+                if op == lBracket {
+                    break
+                }
+                result.WriteByte(op)
             }
         case kleeneStar:
             fallthrough
@@ -108,11 +113,10 @@ func (compiler) postfix(infix string) (string, error) { // TODO: bug
                 if ops.Empty() {
                     break
                 }
-                last := ops.Pop()
-                if priority[cur] >= priority[last] {
+                if priority[cur] >= priority[ops.Top()] {
                     break
                 }
-                result.WriteByte(last)
+                result.WriteByte(ops.Pop())
             }
             ops.Push(cur)
         default:

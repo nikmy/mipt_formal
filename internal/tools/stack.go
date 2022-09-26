@@ -21,6 +21,10 @@ func (s *Stack[T]) Size() int {
     return len(s.data)
 }
 
+func (s *Stack[T]) Top() T {
+    return s.data[len(s.data)-1]
+}
+
 func (s *Stack[T]) Empty() bool {
     return len(s.data) == 0
 }
