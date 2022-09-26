@@ -34,8 +34,8 @@ func (c compiler) Compile(expr string) (fsm.Machine, error) {
             f1 := fragments.Pop()
             f2 := fragments.Pop()
 
-            accept = NewIntrusiveState(fsm.Epsilon)
             start = NewIntrusiveState(fsm.Epsilon, f1.Start, f2.Start)
+            accept = NewIntrusiveState(fsm.Epsilon)
 
             f1.Accept.precede(accept)
             f2.Accept.precede(accept)
@@ -45,20 +45,19 @@ func (c compiler) Compile(expr string) (fsm.Machine, error) {
             }
 
             f := fragments.Pop()
-            accept = NewIntrusiveState(fsm.Epsilon)
-            start = NewIntrusiveState(fsm.Epsilon, f.Start, accept)
-            f.Accept.precede(f.Start, accept)
+            start = NewIntrusiveState(fsm.Epsilon, f.Start, f.Accept)
+            f.Accept.precede(start)
+            accept = f.Accept
         case oneOrMore:
             if fragments.Empty() {
                 return nil, errors.New(fmt.Sprintf(fewArgumentsErrorFormat, oneOrMore))
             }
 
             f := fragments.Pop()
-            accept = NewIntrusiveState(fsm.Epsilon)
-            start = NewIntrusiveState(fsm.Epsilon, f.Start)
-
-            f.Accept.precede(f.Start, accept)
+            f.Accept.precede(f.Start)
+            start, accept = f.Start, f.Accept
         default:
+            // hack: accept is always epsilon-labeled
             accept = NewIntrusiveState(fsm.Epsilon)
             start = NewIntrusiveState(fsm.Word(sym), accept)
         }
@@ -69,8 +68,14 @@ func (c compiler) Compile(expr string) (fsm.Machine, error) {
         })
     }
 
-    if fragments.Size() != 1 {
-        return nil, errors.New("too many fragments")
+    for fragments.Size() > 1 {
+        f := fragments.Pop()
+        p := fragments.Pop()
+        p.Accept.precede(f.Start)
+        fragments.Push(fragment{
+            Start:  p.Start,
+            Accept: f.Accept,
+        })
     }
 
     return c.fragmentToMachine(fragments.Pop()), nil
@@ -80,7 +85,7 @@ func (compiler) fragmentToMachine(f fragment) fsm.Machine {
     return fsm.NewNFA(RunDFSWalker(f.Start, f.Accept))
 }
 
-func (compiler) postfix(infix string) (string, error) {
+func (compiler) postfix(infix string) (string, error) { // TODO: bug
     var result strings.Builder
 
     ops := tools.NewStack[byte]()
@@ -109,7 +114,7 @@ func (compiler) postfix(infix string) (string, error) {
                 }
                 result.WriteByte(last)
             }
-            fallthrough
+            ops.Push(cur)
         default:
             result.WriteByte(cur)
         }

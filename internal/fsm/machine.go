@@ -7,7 +7,25 @@ import (
 )
 
 func NewNFA(start []State, final []State, edges []Transition) *NFA {
-    d := make([]transitions, 0, len(edges)) // TODO
+    nStates := 0
+    for _, t := range edges {
+        if int(t.From) >= nStates {
+            nStates = int(t.From) + 1
+        }
+        if int(t.To) >= nStates {
+            nStates = int(t.To) + 1
+        }
+    }
+    d := make([]transitions, nStates)
+    for _, t := range edges {
+        if d[t.From] == nil {
+            d[t.From] = make(map[Word][]State, 1)
+        }
+        if d[t.From][t.By] == nil {
+            d[t.From][t.By] = make([]State, 0, 1)
+        }
+        d[t.From][t.By] = append(d[t.From][t.By], t.To)
+    }
     return &NFA{
         delta: d,
         start: start,
@@ -55,7 +73,7 @@ func (m *NFA) DOA() string {
         b.WriteString(fmt.Sprintf(doa.StateFormat, s))
         for word, states := range t {
             for _, state := range states {
-                if word == "" {
+                if word == Epsilon {
                     word = doa.Epsilon
                 }
                 b.WriteString(fmt.Sprintf(doa.EdgeFormat, word, state))

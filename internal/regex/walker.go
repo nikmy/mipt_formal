@@ -8,9 +8,7 @@ func RunDFSWalker(init *IntrusiveState, final *IntrusiveState) ([]fsm.State, []f
     transitions := make([]fsm.Transition, 0)
 
     walker := &Walker{
-        visited: map[*IntrusiveState]bool{
-            final: true,
-        },
+        visited: map[*IntrusiveState]bool{},
         mapping: map[*IntrusiveState]fsm.State{
             init:  0,
             final: 1,
@@ -36,19 +34,20 @@ func (w *Walker) Walk(t *[]fsm.Transition) {
         return
     }
 
+    if w.visited[w.current] {
+        return
+    }
+
     w.visited[w.current] = true
 
     cur := w.current
 
     for _, child := range cur.next {
-        if w.visited[child] {
-            continue
-        }
-
         id, used := w.mapping[child]
         if !used {
-            id = w.lastSID
             w.lastSID++
+            id = w.lastSID
+            w.mapping[child] = id
         }
 
         *t = append(*t, fsm.Transition{

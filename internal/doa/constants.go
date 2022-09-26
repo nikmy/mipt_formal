@@ -8,7 +8,7 @@ const (
     StateFormat = "State: %v\n"
     EdgeFormat  = "    -> %v %v\n"
 
-    Begin = "--BEGIN--"
+    Begin = "--BEGIN--\n"
     End   = "--END--"
 
     StateConj = " & "
