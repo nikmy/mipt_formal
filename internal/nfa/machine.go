@@ -22,6 +22,18 @@ func New(start []common.State, final []common.State, edges []common.Transition) 
         }
     }
 
+    for _, s := range start {
+        if int(s) >= nStates {
+            nStates = int(s) + 1
+        }
+    }
+
+    for _, f := range final {
+        if int(f) >= nStates {
+            nStates = int(f) + 1
+        }
+    }
+
     d := make([]Transitions, nStates)
     for s := common.State(0); s < common.State(nStates); s++ {
         d[s] = nil
@@ -59,6 +71,41 @@ func (m *Machine) AddTransition(from common.State, to common.State, by common.Wo
         m.Delta[from][by] = tools.NewSet[common.State]()
     }
     return m.Delta[from][by].Insert(to)
+}
+
+func (m *Machine) Equal(other *Machine) bool {
+    if m.NStates() != other.NStates() {
+        return false
+    }
+
+    starts := tools.NewSet[common.State](m.Start...)
+    for _, s := range other.Start {
+        if !starts.Has(s) {
+            return false
+        }
+    }
+
+    finals := tools.NewSet[common.State](m.Final...)
+    for _, f := range other.Final {
+        if !finals.Has(f) {
+            return false
+        }
+    }
+
+    for i := range m.Delta {
+        for w, set := range m.Delta[i] {
+            if _, found := other.Delta[i][w]; !found {
+                return false
+            }
+            for state := range set {
+                if !other.Delta[i][w].Has(state) {
+                    return false
+                }
+            }
+        }
+    }
+
+    return true
 }
 
 func (m *Machine) MarkAsFinal(state common.State) {
