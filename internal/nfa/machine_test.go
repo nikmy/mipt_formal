@@ -23,7 +23,7 @@ func TestFiniteStateMachine_DOA(t *testing.T) {
         {
             name: "the only state",
             machine: Machine{
-                Delta: []transitions{0: nil},
+                Delta: []Transitions{0: nil},
                 Start: []common.State{0},
                 Final: []common.State{0},
             },
@@ -34,7 +34,7 @@ func TestFiniteStateMachine_DOA(t *testing.T) {
         {
             name: "one edge",
             machine: Machine{
-                Delta: []transitions{
+                Delta: []Transitions{
                     0: map[common.Word][]common.State{"a": {0}},
                 },
                 Start: []common.State{0},
@@ -48,7 +48,7 @@ func TestFiniteStateMachine_DOA(t *testing.T) {
         {
             name: "epsilon transition",
             machine: Machine{
-                Delta: []transitions{
+                Delta: []Transitions{
                     0: map[common.Word][]common.State{"": {0}},
                 },
                 Start: []common.State{0},

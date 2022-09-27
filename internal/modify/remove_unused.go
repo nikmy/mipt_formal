@@ -70,7 +70,11 @@ func clearFinals(m *nfa.Machine, toRemove tools.Set[common.State], mask map[comm
             }
             readPos++
         }
-        m.Final[writePos] = mask[m.Final[readPos]]
+        if alias, found := mask[m.Final[readPos]]; found {
+            m.Final[writePos] = alias
+        } else {
+            m.Final[writePos] = m.Final[readPos]
+        }
         writePos++
         readPos++
     }

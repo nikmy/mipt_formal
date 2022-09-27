@@ -22,6 +22,14 @@ func main() {
                 Name: "Removing unused states",
                 Func: modify.RemoveUnusedStates,
             },
+            {
+                Name: "Building equal DFA",
+                Func: modify.Determine,
+            },
+            {
+                Name: "Removing extra states",
+                Func: modify.RemoveUnusedStates,
+            },
         },
         doa.NewStdoutWriter(),
     )()

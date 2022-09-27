@@ -9,7 +9,7 @@ import (
     "mipt_formal/internal/tools"
 )
 
-type transitions map[common.Word]tools.Set[common.State]
+type Transitions map[common.Word]tools.Set[common.State]
 
 func New(start []common.State, final []common.State, edges []common.Transition) *Machine {
     nStates := 0
@@ -22,14 +22,14 @@ func New(start []common.State, final []common.State, edges []common.Transition) 
         }
     }
 
-    d := make([]transitions, nStates)
+    d := make([]Transitions, nStates)
     for s := common.State(0); s < common.State(nStates); s++ {
         d[s] = nil
     }
 
     for _, t := range edges {
         if d[t.From] == nil {
-            d[t.From] = make(transitions, 1)
+            d[t.From] = make(Transitions, 1)
         }
         if d[t.From][t.By] == nil {
             d[t.From][t.By] = make(tools.Set[common.State])
@@ -45,9 +45,13 @@ func New(start []common.State, final []common.State, edges []common.Transition) 
 }
 
 type Machine struct {
-    Delta []transitions
+    Delta []Transitions
     Start []common.State
     Final []common.State
+}
+
+func (m *Machine) NStates() int {
+    return len(m.Delta)
 }
 
 func (m *Machine) AddTransition(from common.State, to common.State, by common.Word) bool {
