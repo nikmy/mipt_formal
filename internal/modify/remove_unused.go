@@ -111,7 +111,7 @@ func applyMask(m *nfa.Machine, mask map[common.State]common.State) {
     for from := range m.Delta {
         for _, to := range m.Delta[from] {
             for x := range to {
-                if mask[x] != x {
+                if alias, found := mask[x]; found && alias != x {
                     to.Delete(x)
                     to.Insert(mask[x])
                 }

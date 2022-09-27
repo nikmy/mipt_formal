@@ -6,9 +6,15 @@ import (
     "mipt_formal/internal/modify"
     "mipt_formal/internal/pipeline"
     "mipt_formal/internal/regex"
+    "os"
 )
 
 func main() {
+    if len(os.Args) < 2 {
+        panic("No alphabet specified")
+    }
+    abc := os.Args[1]
+
     pipeline.New(
         common.NewLogger(),
         common.NewStdinReader(),
@@ -29,6 +35,10 @@ func main() {
             {
                 Name: "Removing extra states",
                 Func: modify.RemoveUnusedStates,
+            },
+            {
+                Name: "Building complete DFA",
+                Func: modify.Complete(abc),
             },
         },
         doa.NewStdoutWriter(),
