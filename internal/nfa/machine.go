@@ -2,14 +2,16 @@ package nfa
 
 import (
     "fmt"
+    "strings"
+
+    "mipt_formal/internal/common"
     "mipt_formal/internal/doa"
     "mipt_formal/internal/tools"
-    "strings"
 )
 
-type transitions map[Word]tools.Set[State]
+type transitions map[common.Word]tools.Set[common.State]
 
-func New(start []State, final []State, edges []Transition) *Machine {
+func New(start []common.State, final []common.State, edges []common.Transition) *Machine {
     nStates := 0
     for _, t := range edges {
         if int(t.From) >= nStates {
@@ -21,7 +23,7 @@ func New(start []State, final []State, edges []Transition) *Machine {
     }
 
     d := make([]transitions, nStates)
-    for s := State(0); s < State(nStates); s++ {
+    for s := common.State(0); s < common.State(nStates); s++ {
         d[s] = nil
     }
 
@@ -30,7 +32,7 @@ func New(start []State, final []State, edges []Transition) *Machine {
             d[t.From] = make(transitions, 1)
         }
         if d[t.From][t.By] == nil {
-            d[t.From][t.By] = make(tools.Set[State])
+            d[t.From][t.By] = make(tools.Set[common.State])
         }
         d[t.From][t.By].Insert(t.To)
     }
@@ -44,22 +46,26 @@ func New(start []State, final []State, edges []Transition) *Machine {
 
 type Machine struct {
     Delta []transitions
-    Start []State
-    Final []State
+    Start []common.State
+    Final []common.State
 }
 
-func (m *Machine) AddTransition(from State, to State, by Word) bool {
+func (m *Machine) AddTransition(from common.State, to common.State, by common.Word) bool {
     if _, has := m.Delta[from][by]; !has {
-        m.Delta[from][by] = tools.NewSet[State]()
+        m.Delta[from][by] = tools.NewSet[common.State]()
     }
     return m.Delta[from][by].Insert(to)
 }
 
-func (m *Machine) MarkAsFinal(state State) {
+func (m *Machine) MarkAsFinal(state common.State) {
     m.Final = append(m.Final, state)
 }
 
 func (m *Machine) DOA() string {
+    if m == nil {
+        return ""
+    }
+
     var b strings.Builder
     b.Grow(doa.MinimalLength)
 
@@ -87,7 +93,7 @@ func (m *Machine) DOA() string {
         b.WriteString(fmt.Sprintf(doa.StateFormat, s))
         for word, states := range t {
             for state := range states {
-                if word == Epsilon {
+                if word == common.Epsilon {
                     word = doa.Epsilon
                 }
                 b.WriteString(fmt.Sprintf(doa.EdgeFormat, word, state))
@@ -99,6 +105,6 @@ func (m *Machine) DOA() string {
     return b.String()
 }
 
-func (m *Machine) Go(s State, w Word) []State {
+func (m *Machine) Go(s common.State, w common.Word) []common.State {
     panic("not implemented")
 }

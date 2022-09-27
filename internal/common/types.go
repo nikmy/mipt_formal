@@ -1,4 +1,4 @@
-package nfa
+package common
 
 type State uint64
 type Word string

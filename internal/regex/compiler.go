@@ -5,11 +5,12 @@ import (
     "fmt"
     "strings"
 
+    "mipt_formal/internal/common"
     "mipt_formal/internal/nfa"
     "mipt_formal/internal/tools"
 )
 
-func NewCompiler() Compiler {
+func NewCompiler() nfa.Compiler {
     return compiler{}
 }
 
@@ -24,7 +25,7 @@ func (c compiler) Compile(expr string) (*nfa.Machine, error) {
     fragments := tools.NewStack[fragment]()
 
     for _, sym := range []byte(re) {
-        var start, accept *IntrusiveState
+        var start, accept *intrusiveState
         switch sym {
         case orOperator:
             if fragments.Size() < 2 {
@@ -34,8 +35,8 @@ func (c compiler) Compile(expr string) (*nfa.Machine, error) {
             f1 := fragments.Pop()
             f2 := fragments.Pop()
 
-            start = NewIntrusiveState(nfa.Epsilon, f1.Start, f2.Start)
-            accept = NewIntrusiveState(nfa.Epsilon)
+            start = NewIntrusiveState(common.Epsilon, f1.Start, f2.Start)
+            accept = NewIntrusiveState(common.Epsilon)
 
             f1.Accept.precede(accept)
             f2.Accept.precede(accept)
@@ -45,7 +46,7 @@ func (c compiler) Compile(expr string) (*nfa.Machine, error) {
             }
 
             f := fragments.Pop()
-            start = NewIntrusiveState(nfa.Epsilon, f.Start, f.Accept)
+            start = NewIntrusiveState(common.Epsilon, f.Start, f.Accept)
             f.Accept.precede(start)
             accept = f.Accept
         case oneOrMore:
@@ -58,8 +59,8 @@ func (c compiler) Compile(expr string) (*nfa.Machine, error) {
             start, accept = f.Start, f.Accept
         default:
             // hack: accept is always epsilon-labeled
-            accept = NewIntrusiveState(nfa.Epsilon)
-            start = NewIntrusiveState(nfa.Word(sym), accept)
+            accept = NewIntrusiveState(common.Epsilon)
+            start = NewIntrusiveState(common.Word(sym), accept)
         }
 
         fragments.Push(fragment{
@@ -78,6 +79,10 @@ func (c compiler) Compile(expr string) (*nfa.Machine, error) {
         })
     }
 
+    if fragments.Empty() {
+        return nil, nil
+    }
+
     return c.fragmentToMachine(fragments.Pop()), nil
 }
 
@@ -85,7 +90,7 @@ func (compiler) fragmentToMachine(f fragment) *nfa.Machine {
     return nfa.New(RunDFSWalker(f.Start, f.Accept))
 }
 
-func (compiler) postfix(infix string) (string, error) { // TODO: bug
+func (compiler) postfix(infix string) (string, error) {
     var result strings.Builder
 
     ops := tools.NewStack[byte]()

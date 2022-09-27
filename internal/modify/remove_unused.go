@@ -1,26 +1,27 @@
 package modify
 
 import (
+    "mipt_formal/internal/common"
     "mipt_formal/internal/nfa"
     "mipt_formal/internal/tools"
 )
 
 var _ Modifier = RemoveUnusedStates
 
-func RemoveUnusedStates(m *nfa.Machine) {
-    visited := make([]bool, len(m.Delta))
-    findUnusedDFS(m.Start[0], visited, m)
+func RemoveUnusedStates(stateMachine *nfa.Machine) {
+    visited := make([]bool, len(stateMachine.Delta))
+    findUnusedDFS(stateMachine.Start[0], visited, stateMachine)
 
-    unused := make([]nfa.State, 0)
+    unused := make([]common.State, 0)
     for i, used := range visited {
         if !used {
-            unused = append(unused, nfa.State(i))
+            unused = append(unused, common.State(i))
         }
     }
-    removeStates(m, unused)
+    removeStates(stateMachine, unused)
 }
 
-func findUnusedDFS(s nfa.State, visited []bool, m *nfa.Machine) {
+func findUnusedDFS(s common.State, visited []bool, m *nfa.Machine) {
     if visited[s] {
         return
     }
@@ -33,8 +34,8 @@ func findUnusedDFS(s nfa.State, visited []bool, m *nfa.Machine) {
     }
 }
 
-func removeStates(m *nfa.Machine, states []nfa.State) {
-    toRemove := tools.NewSet[nfa.State](states...)
+func removeStates(m *nfa.Machine, states []common.State) {
+    toRemove := tools.NewSet[common.State](states...)
 
     mask := calculateRemovingMask(m, toRemove)
 
@@ -45,9 +46,9 @@ func removeStates(m *nfa.Machine, states []nfa.State) {
     clearFinals(m, toRemove, mask)
 }
 
-func removeOutgoingEdges(m *nfa.Machine, states tools.Set[nfa.State]) {
+func removeOutgoingEdges(m *nfa.Machine, states tools.Set[common.State]) {
     for from := range m.Delta {
-        if states.Has(nfa.State(from)) {
+        if states.Has(common.State(from)) {
             continue
         }
         for w, to := range m.Delta[from] {
@@ -60,7 +61,7 @@ func removeOutgoingEdges(m *nfa.Machine, states tools.Set[nfa.State]) {
     }
 }
 
-func clearFinals(m *nfa.Machine, toRemove tools.Set[nfa.State], mask map[nfa.State]nfa.State) {
+func clearFinals(m *nfa.Machine, toRemove tools.Set[common.State], mask map[common.State]common.State) {
     readPos, writePos := 0, 0
     for readPos < len(m.Final) {
         if toRemove.Has(m.Final[readPos]) {
@@ -76,21 +77,21 @@ func clearFinals(m *nfa.Machine, toRemove tools.Set[nfa.State], mask map[nfa.Sta
     m.Final = m.Final[:writePos]
 }
 
-func calculateRemovingMask(m *nfa.Machine, toRemove tools.Set[nfa.State]) map[nfa.State]nfa.State {
+func calculateRemovingMask(m *nfa.Machine, toRemove tools.Set[common.State]) map[common.State]common.State {
     readPos, writePos := 0, 0
-    mask := make(map[nfa.State]nfa.State, toRemove.Size()) // old --> new
+    mask := make(map[common.State]common.State, toRemove.Size()) // old --> new
 
     // hack for break external cycle
     func() {
         for readPos < len(m.Delta) {
-            for toRemove.Has(nfa.State(readPos)) {
+            for toRemove.Has(common.State(readPos)) {
                 if readPos == len(m.Delta)-1 {
                     return
                 }
                 readPos++
             }
             if readPos > writePos {
-                mask[nfa.State(readPos)] = nfa.State(writePos)
+                mask[common.State(readPos)] = common.State(writePos)
                 m.Delta[writePos] = m.Delta[readPos]
             }
             writePos++
@@ -102,7 +103,7 @@ func calculateRemovingMask(m *nfa.Machine, toRemove tools.Set[nfa.State]) map[nf
     return mask
 }
 
-func applyMask(m *nfa.Machine, mask map[nfa.State]nfa.State) {
+func applyMask(m *nfa.Machine, mask map[common.State]common.State) {
     for from := range m.Delta {
         for _, to := range m.Delta[from] {
             for x := range to {

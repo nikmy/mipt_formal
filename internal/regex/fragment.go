@@ -1,27 +1,29 @@
 package regex
 
-import "mipt_formal/internal/nfa"
+import (
+    "mipt_formal/internal/common"
+)
 
-func NewIntrusiveState(label nfa.Word, next ...*IntrusiveState) *IntrusiveState {
+func NewIntrusiveState(label common.Word, next ...*intrusiveState) *intrusiveState {
     if len(next) == 0 {
         next = nil
     }
-    return &IntrusiveState{
+    return &intrusiveState{
         label: label,
         next:  next,
     }
 }
 
-type IntrusiveState struct {
-    label nfa.Word
-    next  []*IntrusiveState
+type intrusiveState struct {
+    label common.Word
+    next  []*intrusiveState
 }
 
-func (s *IntrusiveState) precede(others ...*IntrusiveState) {
+func (s *intrusiveState) precede(others ...*intrusiveState) {
     s.next = append(s.next, others...)
 }
 
 type fragment struct {
-    Start  *IntrusiveState
-    Accept *IntrusiveState
+    Start  *intrusiveState
+    Accept *intrusiveState
 }

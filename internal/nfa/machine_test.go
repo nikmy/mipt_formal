@@ -2,6 +2,7 @@ package nfa
 
 import (
     "fmt"
+    "mipt_formal/internal/common"
     "mipt_formal/internal/doa"
     "testing"
 
@@ -23,8 +24,8 @@ func TestFiniteStateMachine_DOA(t *testing.T) {
             name: "the only state",
             machine: Machine{
                 Delta: []transitions{0: nil},
-                Start: []State{0},
-                Final: []State{0},
+                Start: []common.State{0},
+                Final: []common.State{0},
             },
             expected: doa.Version + fmt.Sprintf(doa.StartFormat, 0) +
                     fmt.Sprintf(doa.AcceptanceFormat, 0) + doa.Begin +
@@ -34,10 +35,10 @@ func TestFiniteStateMachine_DOA(t *testing.T) {
             name: "one edge",
             machine: Machine{
                 Delta: []transitions{
-                    0: map[Word][]State{"a": {0}},
+                    0: map[common.Word][]common.State{"a": {0}},
                 },
-                Start: []State{0},
-                Final: []State{0},
+                Start: []common.State{0},
+                Final: []common.State{0},
             },
             expected: doa.Version + fmt.Sprintf(doa.StartFormat, 0) +
                     fmt.Sprintf(doa.AcceptanceFormat, 0) + doa.Begin +
@@ -48,10 +49,10 @@ func TestFiniteStateMachine_DOA(t *testing.T) {
             name: "epsilon transition",
             machine: Machine{
                 Delta: []transitions{
-                    0: map[Word][]State{"": {0}},
+                    0: map[common.Word][]common.State{"": {0}},
                 },
-                Start: []State{0},
-                Final: []State{0},
+                Start: []common.State{0},
+                Final: []common.State{0},
             },
             expected: doa.Version + fmt.Sprintf(doa.StartFormat, 0) +
                     fmt.Sprintf(doa.AcceptanceFormat, 0) + doa.Begin +

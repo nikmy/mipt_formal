@@ -9,7 +9,7 @@ const (
     EdgeFormat  = "    -> %v %v\n"
 
     Begin = "--BEGIN--\n"
-    End   = "--END--"
+    End   = "--END--\n"
 
     StateConj = " & "
     Epsilon   = "EPS"

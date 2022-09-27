@@ -1,15 +1,15 @@
 package regex
 
 import (
-    "mipt_formal/internal/nfa"
+    "mipt_formal/internal/common"
 )
 
-func RunDFSWalker(init *IntrusiveState, final *IntrusiveState) ([]nfa.State, []nfa.State, []nfa.Transition) {
-    transitions := make([]nfa.Transition, 0)
+func RunDFSWalker(init *intrusiveState, final *intrusiveState) ([]common.State, []common.State, []common.Transition) {
+    transitions := make([]common.Transition, 0)
 
     walker := &Walker{
-        visited: map[*IntrusiveState]bool{},
-        mapping: map[*IntrusiveState]nfa.State{
+        visited: map[*intrusiveState]bool{},
+        mapping: map[*intrusiveState]common.State{
             init:  0,
             final: 1,
         },
@@ -19,17 +19,17 @@ func RunDFSWalker(init *IntrusiveState, final *IntrusiveState) ([]nfa.State, []n
 
     walker.Walk(&transitions)
 
-    return []nfa.State{0}, []nfa.State{1}, transitions
+    return []common.State{0}, []common.State{1}, transitions
 }
 
 type Walker struct {
-    visited map[*IntrusiveState]bool
-    mapping map[*IntrusiveState]nfa.State
-    current *IntrusiveState
-    lastSID nfa.State
+    visited map[*intrusiveState]bool
+    mapping map[*intrusiveState]common.State
+    current *intrusiveState
+    lastSID common.State
 }
 
-func (w *Walker) Walk(t *[]nfa.Transition) {
+func (w *Walker) Walk(t *[]common.Transition) {
     if len(w.current.next) == 0 {
         return
     }
@@ -50,7 +50,7 @@ func (w *Walker) Walk(t *[]nfa.Transition) {
             w.mapping[child] = id
         }
 
-        *t = append(*t, nfa.Transition{
+        *t = append(*t, common.Transition{
             From: w.mapping[cur],
             To:   id,
             By:   cur.label,
