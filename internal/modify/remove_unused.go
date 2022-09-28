@@ -73,7 +73,7 @@ func calculateRemovingMask(m *nfa.Machine, toRemove tools.Set[common.State]) map
 func clearFinals(m *nfa.Machine, toRemove tools.Set[common.State], mask map[common.State]common.State) {
     readPos, writePos := 0, 0
     for readPos < len(m.Final) {
-        if toRemove.Has(m.Final[readPos]) {
+        for toRemove.Has(m.Final[readPos]) {
             if readPos == len(m.Final)-1 {
                 break
             }
