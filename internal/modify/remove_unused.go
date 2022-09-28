@@ -39,46 +39,9 @@ func removeStates(m *nfa.Machine, states []common.State) {
 
     mask := calculateRemovingMask(m, toRemove)
 
-    removeOutgoingEdges(m, toRemove)
-
     applyMask(m, mask)
 
     clearFinals(m, toRemove, mask)
-}
-
-func removeOutgoingEdges(m *nfa.Machine, states tools.Set[common.State]) {
-    for from := range m.Delta {
-        if states.Has(common.State(from)) {
-            continue
-        }
-        for w, to := range m.Delta[from] {
-            for x := range to {
-                if states.Has(x) {
-                    m.Delta[from][w].Delete(x)
-                }
-            }
-        }
-    }
-}
-
-func clearFinals(m *nfa.Machine, toRemove tools.Set[common.State], mask map[common.State]common.State) {
-    readPos, writePos := 0, 0
-    for readPos < len(m.Final) {
-        if toRemove.Has(m.Final[readPos]) {
-            if readPos == len(m.Final)-1 {
-                break
-            }
-            readPos++
-        }
-        if alias, found := mask[m.Final[readPos]]; found {
-            m.Final[writePos] = alias
-        } else {
-            m.Final[writePos] = m.Final[readPos]
-        }
-        writePos++
-        readPos++
-    }
-    m.Final = m.Final[:writePos]
 }
 
 func calculateRemovingMask(m *nfa.Machine, toRemove tools.Set[common.State]) map[common.State]common.State {
@@ -105,6 +68,26 @@ func calculateRemovingMask(m *nfa.Machine, toRemove tools.Set[common.State]) map
 
     m.Delta = m.Delta[:writePos]
     return mask
+}
+
+func clearFinals(m *nfa.Machine, toRemove tools.Set[common.State], mask map[common.State]common.State) {
+    readPos, writePos := 0, 0
+    for readPos < len(m.Final) {
+        if toRemove.Has(m.Final[readPos]) {
+            if readPos == len(m.Final)-1 {
+                break
+            }
+            readPos++
+        }
+        if alias, found := mask[m.Final[readPos]]; found {
+            m.Final[writePos] = alias
+        } else {
+            m.Final[writePos] = m.Final[readPos]
+        }
+        writePos++
+        readPos++
+    }
+    m.Final = m.Final[:writePos]
 }
 
 func applyMask(m *nfa.Machine, mask map[common.State]common.State) {
