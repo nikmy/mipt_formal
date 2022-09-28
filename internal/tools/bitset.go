@@ -29,10 +29,10 @@ func (bs *Bitset) Size() int {
 }
 
 func (bs *Bitset) Xor(other *Bitset) bool {
-    if bs.Size() != other.Size() {
-        return false
-    }
     for i := range bs.data {
+        if i >= len(other.data) {
+            break
+        }
         if bs.data[i]^other.data[i] != 0 {
             return true
         }
