@@ -77,6 +77,12 @@ func (m *Machine) Equal(other *Machine) bool {
     if m.NStates() != other.NStates() {
         return false
     }
+    if len(m.Start) != len(other.Start) {
+        return false
+    }
+    if len(m.Final) != len(other.Final) {
+        return false
+    }
 
     starts := tools.NewSet[common.State](m.Start...)
     for _, s := range other.Start {
@@ -156,6 +162,12 @@ func (m *Machine) DOA() string {
     return b.String()
 }
 
-func (m *Machine) Go(s common.State, w common.Word) []common.State {
-    panic("not implemented")
+func (m *Machine) Go(state []common.State, w common.Word) []common.State {
+    slice := make([]common.State, 0)
+    for _, s := range state {
+        if next, can := m.Delta[s][w]; can {
+            slice = append(slice, next.AsSlice()...)
+        }
+    }
+    return slice
 }

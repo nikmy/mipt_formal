@@ -1,7 +1,6 @@
 package modify
 
 import (
-    "fmt"
     "mipt_formal/internal/common"
     "mipt_formal/internal/nfa"
     "mipt_formal/internal/tools"
@@ -62,7 +61,9 @@ func Determine(m *nfa.Machine) {
     aliases := make(map[*internalState]common.State)
 
     if used.TryInsert(start) && start.Mask.Count() > 1 {
-        aliases[start] = addState(m, start)
+        newStart := addState(m, start)
+        aliases[start] = newStart
+        m.Start = []common.State{newStart}
     }
 
     for !queue.Empty() {
@@ -92,14 +93,6 @@ func Determine(m *nfa.Machine) {
                 }
             }
         }
-    }
-
-    for s, a := range aliases {
-        fmt.Print("{ ")
-        for x := range s.Mask.Iterate() {
-            fmt.Printf("%v ", x)
-        }
-        fmt.Printf("} --> %v\n", a)
     }
 
     for i, transitions := range m.Delta {
@@ -179,15 +172,6 @@ func newInternalState(m *nfa.Machine) *internalState {
         Mask:   tools.NewBitset(m.NStates()),
         Accept: false,
     }
-}
-
-func makeInternal(state common.State, accept bool, m *nfa.Machine) *internalState {
-    s := internalState{
-        Mask:   tools.NewBitset(m.NStates()),
-        Accept: accept,
-    }
-    s.Mask.Fix(int(state))
-    return &s
 }
 
 type internalState struct {

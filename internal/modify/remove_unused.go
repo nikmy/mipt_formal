@@ -72,21 +72,23 @@ func calculateRemovingMask(m *nfa.Machine, toRemove tools.Set[common.State]) map
 
 func clearFinals(m *nfa.Machine, toRemove tools.Set[common.State], mask map[common.State]common.State) {
     readPos, writePos := 0, 0
-    for readPos < len(m.Final) {
-        for toRemove.Has(m.Final[readPos]) {
-            if readPos == len(m.Final)-1 {
-                break
+    func() {
+        for readPos < len(m.Final) {
+            for toRemove.Has(m.Final[readPos]) {
+                if readPos == len(m.Final)-1 {
+                    return
+                }
+                readPos++
             }
+            if alias, found := mask[m.Final[readPos]]; found {
+                m.Final[writePos] = alias
+            } else {
+                m.Final[writePos] = m.Final[readPos]
+            }
+            writePos++
             readPos++
         }
-        if alias, found := mask[m.Final[readPos]]; found {
-            m.Final[writePos] = alias
-        } else {
-            m.Final[writePos] = m.Final[readPos]
-        }
-        writePos++
-        readPos++
-    }
+    }()
     m.Final = m.Final[:writePos]
 }
 

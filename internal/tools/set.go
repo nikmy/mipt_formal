@@ -30,3 +30,11 @@ func (s Set[T]) Insert(key T) bool {
 func (s Set[T]) Delete(key T) {
     delete(s, key)
 }
+
+func (s Set[T]) AsSlice() []T {
+    slice := make([]T, s.Size())
+    for x := range s {
+        slice = append(slice, x)
+    }
+    return slice
+}

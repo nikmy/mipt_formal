@@ -20,7 +20,6 @@ func Sequence(logger common.Logger, steps ...Step) Modifier {
         }
         logger.Info("Running NFA modifying sequence...")
         for i, step := range steps {
-            logger.Info(m.DOA())
             logger.Infof("Step %d: %s...", i+1, step.Name)
             step.Func(m)
         }
