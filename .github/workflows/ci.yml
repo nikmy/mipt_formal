@@ -27,4 +27,4 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Tests with coverage
-        run: go test mipt_formal/internal/modify -coverprofile=out.cov
+        run: go test mipt_formal/internal/modify -coverprofile="out.cov"
