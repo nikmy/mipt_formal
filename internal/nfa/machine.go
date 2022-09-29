@@ -36,7 +36,7 @@ func New(start []common.State, final []common.State, edges []common.Transition) 
 
     d := make([]Transitions, nStates)
     for s := common.State(0); s < common.State(nStates); s++ {
-        d[s] = nil
+        d[s] = make(Transitions)
     }
 
     for _, t := range edges {
@@ -74,6 +74,9 @@ func (m *Machine) AddTransition(from common.State, to common.State, by common.Wo
 }
 
 func (m *Machine) Equal(other *Machine) bool {
+    if m == nil || other == nil {
+        return m == other
+    }
     if m.NStates() != other.NStates() {
         return false
     }
