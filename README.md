@@ -4,12 +4,11 @@
 
 ### Regular expression
 
-|  operator  |      meaning      |
-|:----------:|:-----------------:|
-| a &#124; b |    or (union)     |
-|     a+     | one or more times |
-|     a*     |     any times     |
-|    (a)     |   just brackets   |
+| operator |      meaning      |
+|:--------:|:-----------------:|
+|  a + b   |    or (union)     |
+|    a*    |     any times     |
+|   (a)    |   just brackets   |
 
 ### State machine in DOA
 
