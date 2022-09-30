@@ -1,7 +1,6 @@
 package modify
 
 import (
-    "fmt"
     "testing"
 
     "github.com/stretchr/testify/assert"
@@ -76,7 +75,6 @@ func TestComplete(t *testing.T) {
     for _, c := range cases {
         t.Run(c.name, func(t *testing.T) {
             Complete(c.abc)(c.got)
-            fmt.Println(c.got.DOA())
             assert.True(t, c.got.Equal(c.want))
         })
     }

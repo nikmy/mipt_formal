@@ -1,4 +1,4 @@
-package main
+package tools
 
 import (
     "mipt_formal/internal/common"
@@ -6,18 +6,13 @@ import (
     "mipt_formal/internal/modify"
     "mipt_formal/internal/pipeline"
     "mipt_formal/internal/regex"
-    "os"
 )
 
-func main() {
-    if len(os.Args) < 2 {
-        panic("No alphabet specified")
-    }
-    abc := os.Args[1]
-
+func RegexToCDFA(expr string, alpha string) string {
+    var result stringWriter
     pipeline.New(
         common.NewLogger(),
-        common.NewStdinReader(),
+        readString(expr),
         regex.NewCompiler(),
         []modify.Step{
             {
@@ -29,18 +24,19 @@ func main() {
                 Func: modify.RemoveUnusedStates,
             },
             {
-                Name: "Building equal DFA",
+                Name: "Building equivalent DFA",
                 Func: modify.Determine,
             },
             {
-                Name: "Removing extra states",
+                Name: "Removing unused states",
                 Func: modify.RemoveUnusedStates,
             },
             {
-                Name: "Building complete DFA",
-                Func: modify.Complete(abc),
+                Name: "Completing DFA",
+                Func: modify.Complete(alpha),
             },
         },
-        doa.NewStdoutWriter(),
+        doa.NewWriter(&result),
     )()
+    return result.String()
 }

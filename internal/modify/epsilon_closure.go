@@ -2,8 +2,6 @@ package modify
 
 import (
     "mipt_formal/internal/common"
-    "mipt_formal/internal/tools"
-
     "mipt_formal/internal/nfa"
 )
 
@@ -33,16 +31,14 @@ func buildTransitiveEpsilonClosure(m *nfa.Machine) {
 }
 
 func compressAcceptances(m *nfa.Machine) {
-    f := tools.NewSet[common.State](m.Final...)
     newAccept := true
     for newAccept {
         newAccept = false
         for i, t := range m.Delta {
             s := common.State(i)
             for j := range t[common.Epsilon] {
-                if f.Has(j) {
-                    if f.Insert(s) {
-                        m.MarkAsFinal(s)
+                if m.Final.Has(j) {
+                    if m.Final.Insert(s) {
                         newAccept = true
                     }
                 }

@@ -9,3 +9,7 @@ type Logger interface {
 type Reader interface {
     Read() (string, error)
 }
+
+type Writer interface {
+    Write(any) error
+}

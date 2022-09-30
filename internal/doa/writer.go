@@ -3,12 +3,19 @@ package doa
 import (
     "errors"
     "fmt"
+    "io"
     "os"
 )
 
 func NewStdoutWriter() Writer {
     return &doaWriter{
         out: os.Stdout,
+    }
+}
+
+func NewWriter(w io.Writer) Writer {
+    return &doaWriter{
+        out: w,
     }
 }
 
@@ -21,7 +28,7 @@ func NewFileWriter(filename string) (Writer, error) {
 }
 
 type doaWriter struct {
-    out *os.File
+    out io.Writer
 }
 
 func (w *doaWriter) Write(a serializable) error {

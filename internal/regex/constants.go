@@ -2,18 +2,10 @@ package regex
 
 const (
     kleeneStar = '*'
-    orOperator = '|'
-    oneOrMore  = '+'
+    orOperator = '+'
     lBracket   = '('
     rBracket   = ')'
 
     fewArgumentsErrorFormat = "few arguments for %v operator"
+    invalidParenthesesError = "invalid parentheses"
 )
-
-var priority = map[byte]int{
-    kleeneStar: 10,
-    oneOrMore:  10,
-    orOperator: 6,
-    rBracket:   4,
-    lBracket:   2,
-}

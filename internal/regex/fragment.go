@@ -4,7 +4,7 @@ import (
     "mipt_formal/internal/common"
 )
 
-func NewIntrusiveState(label common.Word, next ...*intrusiveState) *intrusiveState {
+func newIntrusiveState(label common.Word, next ...*intrusiveState) *intrusiveState {
     if len(next) == 0 {
         next = nil
     }

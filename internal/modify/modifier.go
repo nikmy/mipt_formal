@@ -23,6 +23,6 @@ func Sequence(logger common.Logger, steps ...Step) Modifier {
             logger.Infof("Step %d: %s...", i+1, step.Name)
             step.Func(m)
         }
-        logger.Info("Done")
+        logger.Info("Modification done")
     }
 }

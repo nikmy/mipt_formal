@@ -10,15 +10,17 @@ var _ Modifier = RemoveUnusedStates
 
 func RemoveUnusedStates(stateMachine *nfa.Machine) {
     visited := make([]bool, len(stateMachine.Delta))
-    findUnusedDFS(stateMachine.Start[0], visited, stateMachine)
+    for s := range stateMachine.Start {
+        findUnusedDFS(s, visited, stateMachine)
+    }
 
-    unused := make([]common.State, 0)
+    unused := tools.NewSet[common.State]()
     for i, used := range visited {
         if !used {
-            unused = append(unused, common.State(i))
+            unused.Insert(common.State(i))
         }
     }
-    removeStates(stateMachine, unused)
+    removeUnusedStates(stateMachine, unused)
 }
 
 func findUnusedDFS(s common.State, visited []bool, m *nfa.Machine) {
@@ -34,13 +36,9 @@ func findUnusedDFS(s common.State, visited []bool, m *nfa.Machine) {
     }
 }
 
-func removeStates(m *nfa.Machine, states []common.State) {
-    toRemove := tools.NewSet[common.State](states...)
-
+func removeUnusedStates(m *nfa.Machine, toRemove tools.Set[common.State]) {
     mask := calculateRemovingMask(m, toRemove)
-
     applyMask(m, mask)
-
     clearFinals(m, toRemove, mask)
 }
 
@@ -71,25 +69,18 @@ func calculateRemovingMask(m *nfa.Machine, toRemove tools.Set[common.State]) map
 }
 
 func clearFinals(m *nfa.Machine, toRemove tools.Set[common.State], mask map[common.State]common.State) {
-    readPos, writePos := 0, 0
-    func() {
-        for readPos < len(m.Final) {
-            for toRemove.Has(m.Final[readPos]) {
-                if readPos == len(m.Final)-1 {
-                    return
-                }
-                readPos++
-            }
-            if alias, found := mask[m.Final[readPos]]; found {
-                m.Final[writePos] = alias
-            } else {
-                m.Final[writePos] = m.Final[readPos]
-            }
-            writePos++
-            readPos++
+    newFinals := tools.NewSet[common.State]()
+    for f := range m.Final {
+        if toRemove.Has(f) {
+            continue
         }
-    }()
-    m.Final = m.Final[:writePos]
+        if alias, found := mask[f]; found {
+            newFinals.Insert(alias)
+        } else {
+            newFinals.Insert(f)
+        }
+    }
+    m.Final = newFinals
 }
 
 func applyMask(m *nfa.Machine, mask map[common.State]common.State) {

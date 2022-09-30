@@ -32,7 +32,7 @@ func (s Set[T]) Delete(key T) {
 }
 
 func (s Set[T]) AsSlice() []T {
-    slice := make([]T, s.Size())
+    slice := make([]T, 0, s.Size())
     for x := range s {
         slice = append(slice, x)
     }

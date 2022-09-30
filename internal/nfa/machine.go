@@ -51,19 +51,25 @@ func New(start []common.State, final []common.State, edges []common.Transition) 
 
     return &Machine{
         Delta: d,
-        Start: start,
-        Final: final,
+        Start: tools.NewSet[common.State](start...),
+        Final: tools.NewSet[common.State](final...),
     }
 }
 
 type Machine struct {
     Delta []Transitions
-    Start []common.State
-    Final []common.State
+    Start tools.Set[common.State]
+    Final tools.Set[common.State]
 }
 
 func (m *Machine) NStates() int {
     return len(m.Delta)
+}
+
+func (m *Machine) AddState() common.State {
+    newState := common.State(m.NStates())
+    m.Delta = append(m.Delta, make(Transitions))
+    return newState
 }
 
 func (m *Machine) AddTransition(from common.State, to common.State, by common.Word) bool {
@@ -80,23 +86,21 @@ func (m *Machine) Equal(other *Machine) bool {
     if m.NStates() != other.NStates() {
         return false
     }
-    if len(m.Start) != len(other.Start) {
+    if m.Start.Size() != other.Start.Size() {
         return false
     }
-    if len(m.Final) != len(other.Final) {
+    if m.Final.Size() != other.Final.Size() {
         return false
     }
 
-    starts := tools.NewSet[common.State](m.Start...)
-    for _, s := range other.Start {
-        if !starts.Has(s) {
+    for s := range other.Start {
+        if !m.Start.Has(s) {
             return false
         }
     }
 
-    finals := tools.NewSet[common.State](m.Final...)
-    for _, f := range other.Final {
-        if !finals.Has(f) {
+    for f := range other.Final {
+        if !m.Final.Has(f) {
             return false
         }
     }
@@ -118,7 +122,7 @@ func (m *Machine) Equal(other *Machine) bool {
 }
 
 func (m *Machine) MarkAsFinal(state common.State) {
-    m.Final = append(m.Final, state)
+    m.Final.Insert(state)
 }
 
 func (m *Machine) DOA() string {
@@ -131,17 +135,19 @@ func (m *Machine) DOA() string {
 
     b.WriteString(doa.Version)
 
-    starts := fmt.Sprintf("%v", m.Start[0])
-    if len(m.Start) > 1 {
-        for _, s := range m.Start[1:] {
+    start := m.Start.AsSlice()
+    starts := fmt.Sprintf("%v", start[0])
+    if m.Start.Size() > 1 {
+        for _, s := range start[1:] {
             starts += fmt.Sprintf(doa.StateConj+"%v", s)
         }
     }
     b.WriteString(fmt.Sprintf(doa.StartFormat, starts))
 
-    finals := fmt.Sprintf("%v", m.Final[0])
-    if len(m.Final) > 1 {
-        for _, f := range m.Final[1:] {
+    final := m.Final.AsSlice()
+    finals := fmt.Sprintf("%v", final[0])
+    if m.Final.Size() > 1 {
+        for _, f := range final[1:] {
             finals += fmt.Sprintf(doa.StateConj+"%v", f)
         }
     }
