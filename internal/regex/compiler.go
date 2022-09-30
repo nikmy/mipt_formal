@@ -13,7 +13,7 @@ func NewCompiler() nfa.Compiler {
 type compiler struct{}
 
 func (c compiler) Compile(expr string) (*nfa.Machine, error) {
-    parser := Parser{}
+    var parser parser
     ast, err := parser.parseRegex(expr)
     if err != nil {
         return nil, errors.New(fmt.Sprintf("regex parsing error: %s", err))

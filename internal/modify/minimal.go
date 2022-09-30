@@ -9,8 +9,8 @@ import (
 func Minimize(m *nfa.Machine) {
     bSteps := []Modifier{
         EliminateEpsilonMoves, RemoveUnusedStates,
-        Reverse, Determine, Reverse, Determine,
-        RemoveUnusedStates,
+        Reverse, Determine, RemoveUnusedStates,
+        Reverse, Determine, RemoveUnusedStates,
     }
     for _, step := range bSteps {
         step(m)

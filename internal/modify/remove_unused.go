@@ -39,7 +39,6 @@ func findUnusedDFS(s common.State, visited []bool, m *nfa.Machine) {
 func removeUnusedStates(m *nfa.Machine, toRemove tools.Set[common.State]) {
     mask := calculateRemovingMask(m, toRemove)
     applyMask(m, mask)
-    clearFinals(m, toRemove, mask)
 }
 
 func calculateRemovingMask(m *nfa.Machine, toRemove tools.Set[common.State]) map[common.State]common.State {
@@ -55,32 +54,13 @@ func calculateRemovingMask(m *nfa.Machine, toRemove tools.Set[common.State]) map
                 }
                 readPos++
             }
-            if readPos > writePos {
-                mask[common.State(readPos)] = common.State(writePos)
-                m.Delta[writePos] = m.Delta[readPos]
-            }
+            mask[common.State(readPos)] = common.State(writePos)
             writePos++
             readPos++
         }
     }()
 
-    m.Delta = m.Delta[:writePos]
     return mask
-}
-
-func clearFinals(m *nfa.Machine, toRemove tools.Set[common.State], mask map[common.State]common.State) {
-    newFinals := tools.NewSet[common.State]()
-    for f := range m.Final {
-        if toRemove.Has(f) {
-            continue
-        }
-        if alias, found := mask[f]; found {
-            newFinals.Insert(alias)
-        } else {
-            newFinals.Insert(f)
-        }
-    }
-    m.Final = newFinals
 }
 
 func applyMask(m *nfa.Machine, mask map[common.State]common.State) {
@@ -94,4 +74,37 @@ func applyMask(m *nfa.Machine, mask map[common.State]common.State) {
             }
         }
     }
+
+    newDelta := make([]nfa.Transitions, len(mask))
+    for i := range newDelta {
+        newDelta[i] = make(nfa.Transitions, len(m.Delta[i]))
+    }
+    for i := range m.Delta {
+        alias, found := mask[common.State(i)]
+        if !found {
+            continue
+        }
+        newDelta[alias] = m.Delta[i]
+    }
+    m.Delta = newDelta
+
+    newStart := tools.NewSet[common.State]()
+    for s := range m.Start {
+        alias, found := mask[s]
+        if !found {
+            continue
+        }
+        newStart.Insert(alias)
+    }
+    m.Start = newStart
+
+    newFinal := tools.NewSet[common.State]()
+    for f := range m.Final {
+        alias, found := mask[f]
+        if !found {
+            continue
+        }
+        newFinal.Insert(alias)
+    }
+    m.Final = newFinal
 }

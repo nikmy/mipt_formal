@@ -24,37 +24,34 @@ func (t *AST) compile() *fragment {
     return t.operator(args...)
 }
 
-type Parser struct{}
+type parser struct{}
 
-func (p Parser) parseRegex(re string) (*AST, error) {
+func (p parser) parseRegex(re string) (*AST, error) {
     return p.splitByOr(re)
 }
 
-func (p Parser) splitByOr(expr string) (*AST, error) {
+func (p parser) splitByOr(expr string) (*AST, error) {
     split := make([]string, 0)
     balance := 0
     l, r := 0, 0
     for r < len(expr) {
         c := expr[r]
         r++
-        if c == lBracket {
+        switch c {
+        case lBracket:
             balance++
-            continue
-        }
-        if c == rBracket {
+        case rBracket:
             balance--
             if balance < 0 {
                 return nil, errors.New(invalidParenthesesError)
             }
-            continue
-        }
-        if c == orOperator {
+        case orOperator:
             if balance == 0 {
                 split = append(split, expr[l:r-1])
                 l = r
             }
-            continue
         }
+
         if r == len(expr) {
             split = append(split, expr[l:r])
         }
@@ -89,11 +86,7 @@ func (p Parser) splitByOr(expr string) (*AST, error) {
     }, nil
 }
 
-func (p Parser) eval(expr string) (*AST, error) {
-    for len(expr) > 1 && expr[0] == lBracket && expr[len(expr)-1] == rBracket {
-        expr = expr[1 : len(expr)-1]
-    }
-
+func (p parser) eval(expr string) (*AST, error) {
     if len(expr) == 0 {
         return nil, nil
     }
