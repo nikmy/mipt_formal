@@ -92,6 +92,7 @@ func (p parser) eval(expr string) (*AST, error) {
     }
 
     nodes := make([]*AST, 0, len(expr))
+    balance := 0
     i := 0
     for i < len(expr) {
         c := expr[i]
@@ -102,10 +103,18 @@ func (p parser) eval(expr string) (*AST, error) {
                 return nil, errors.New("invalid parentheses")
             }
 
+            balance++
+
             j := i
             for i < len(expr) {
+                if expr[i] == lBracket {
+                    balance++
+                }
                 if expr[i] == rBracket {
-                    break
+                    balance--
+                    if balance == 0 {
+                        break
+                    }
                 }
                 i++
             }
@@ -136,6 +145,14 @@ func (p parser) eval(expr string) (*AST, error) {
                 operator: _kleene,
                 children: []*AST{last},
             }
+            continue
+        }
+
+        if c == epsilon {
+            nodes = append(nodes, &AST{
+                operator: _eps,
+                children: nil,
+            })
             continue
         }
 

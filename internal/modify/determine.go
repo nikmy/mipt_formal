@@ -17,7 +17,6 @@ import (
        while queue not empty:
            q := queue.pop()
            next := make(map[Word]SetState)
-           accept := false
            for from in q:
                for by, to in from.Outgoing:
                    if from.Accept:
@@ -45,37 +44,30 @@ func Determine(m *nfa.Machine) {
     queue := tools.NewQueue[*internalState]()
     start := newInternalState(m)
     for s := range m.Start {
-        for f := range m.Final {
-            if s == f {
-                start.Accept = true
-                break
-            }
+        if m.Final.Has(s) {
+            start.Accept = true
         }
         start.Mask.Fix(int(s))
     }
-    queue.Push(start)
 
     used := newStateSet(m.NStates())
     aliases := make(map[*internalState]common.State)
 
-    if used.TryInsert(start) && start.Mask.Count() > 1 {
-        newStart := addState(m, start)
-        aliases[start] = newStart
-        m.Start = tools.NewSet[common.State](newStart)
-    }
+    used.TryInsert(start)
+    queue.Push(start)
 
     for !queue.Empty() {
         q := queue.Pop()
         group := make(map[common.Word]*internalState, 0)
         for from := range q.Mask.Iterate() {
-            for w, t := range m.Delta[from] {
-                if _, found := group[w]; !found {
-                    group[w] = newInternalState(m)
+            for by, t := range m.Delta[from] {
+                if _, found := group[by]; !found {
+                    group[by] = newInternalState(m)
                 }
                 for to := range t {
-                    group[w].Mask.Fix(int(to))
-                    if m.Final.Has(to) && !group[w].Accept {
-                        group[w].Accept = true
+                    group[by].Mask.Fix(int(to))
+                    if m.Final.Has(to) {
+                        group[by].Accept = true
                     }
                 }
             }
@@ -93,7 +85,13 @@ func Determine(m *nfa.Machine) {
         }
     }
 
-    for i, transitions := range m.Delta {
+    if start.Mask.Count() > 1 {
+        newStart := addState(m, start)
+        aliases[start] = newStart
+        m.Start = tools.NewSet[common.State](newStart)
+    }
+
+    for i, transitions := range m.Delta { // update ingoing edges to new states
         bySym := make(map[common.Word]*internalState, 0)
         for w, dst := range transitions {
             if _, found := bySym[w]; !found {
@@ -109,10 +107,14 @@ func Determine(m *nfa.Machine) {
             }
         }
         for w, s := range bySym {
-            if s.Mask.Count() <= 1 {
+            if s.Mask.Count() <= 1 { // skip old states
                 continue
             }
-            newTo := aliases[used.Find(s)]
+            p := used.Find(s) // skip unused states
+            if p == nil {
+                continue
+            }
+            newTo := aliases[p]
             m.Delta[i][w] = tools.NewSet[common.State](newTo)
         }
     }
@@ -120,7 +122,7 @@ func Determine(m *nfa.Machine) {
 
 func addState(m *nfa.Machine, state *internalState) common.State {
     newState := m.AddState()
-    for i := range state.Mask.Iterate() {
+    for i := range state.Mask.Iterate() { // add outgoing edges from new state
         for w, dst := range m.Delta[i] {
             for s := range dst {
                 m.AddTransition(newState, s, w)
@@ -161,7 +163,7 @@ func (s *stateSet) Find(state *internalState) *internalState {
             return m
         }
     }
-    panic("wrong use!")
+    return nil
 }
 
 func newInternalState(m *nfa.Machine) *internalState {

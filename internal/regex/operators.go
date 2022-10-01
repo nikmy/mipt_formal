@@ -41,3 +41,11 @@ func _id(symbol byte) func(args ...*fragment) *fragment {
         }
     }
 }
+
+func _eps(_ ...*fragment) *fragment {
+    state := newIntrusiveState(common.Epsilon)
+    return &fragment{
+        Start:  state,
+        Accept: state,
+    }
+}
