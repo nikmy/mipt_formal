@@ -110,8 +110,8 @@ func Determine(m *nfa.Machine) {
             if s.Mask.Count() <= 1 { // skip old states
                 continue
             }
-            p := used.Find(s) // skip unused states
-            if p == nil {
+            p := used.Find(s)
+            if p == nil { // skip unused states
                 continue
             }
             newTo := aliases[p]
