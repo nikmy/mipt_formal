@@ -42,6 +42,10 @@ import (
 */
 func Determine(m *nfa.Machine) {
     queue := tools.NewQueue[*internalState]()
+
+    used := newStateSet(m.NStates())
+    aliases := make(map[*internalState]common.State)
+
     start := newInternalState(m)
     for s := range m.Start {
         if m.Final.Has(s) {
@@ -49,9 +53,11 @@ func Determine(m *nfa.Machine) {
         }
         start.Mask.Fix(int(s))
     }
-
-    used := newStateSet(m.NStates())
-    aliases := make(map[*internalState]common.State)
+    if start.Mask.Count() > 1 {
+        newStart := addState(m, start)
+        aliases[start] = newStart
+        m.Start = tools.NewSet[common.State](newStart)
+    }
 
     used.TryInsert(start)
     queue.Push(start)
@@ -83,12 +89,6 @@ func Determine(m *nfa.Machine) {
                 }
             }
         }
-    }
-
-    if start.Mask.Count() > 1 {
-        newStart := addState(m, start)
-        aliases[start] = newStart
-        m.Start = tools.NewSet[common.State](newStart)
     }
 
     for i, transitions := range m.Delta { // update ingoing edges to new states
