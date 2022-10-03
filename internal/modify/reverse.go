@@ -1,0 +1,23 @@
+package modify
+
+import (
+    "mipt_formal/internal/common"
+    "mipt_formal/internal/nfa"
+)
+
+func Reverse(m *nfa.Machine) {
+    invDelta := make([]common.Transition, 0, len(m.Delta))
+    for to := range m.Delta {
+        for by, dst := range m.Delta[to] {
+            for from := range dst {
+                invDelta = append(invDelta, common.Transition{
+                    From: from,
+                    To:   common.State(to),
+                    By:   by,
+                })
+            }
+        }
+    }
+
+    *m = *nfa.New(m.Final.AsSlice(), m.Start.AsSlice(), invDelta)
+}
