@@ -84,7 +84,7 @@ func TestDetermine(t *testing.T) {
             }),
         },
         {
-            name: "keep unused states, drop unused edges",
+            name: "ignore unused states & edges",
             got: nfa.New([]State{0}, []State{4}, []Transition{
                 {From: 0, To: 4, By: "b"},
                 {From: 1, To: 2, By: "a"},
@@ -92,6 +92,8 @@ func TestDetermine(t *testing.T) {
             }),
             want: nfa.New([]State{0}, []State{4}, []Transition{
                 {From: 0, To: 4, By: "b"},
+                {From: 1, To: 2, By: "a"},
+                {From: 1, To: 3, By: "a"},
             }),
         },
     }
@@ -99,7 +101,7 @@ func TestDetermine(t *testing.T) {
     for _, c := range cases {
         t.Run(c.name, func(t *testing.T) {
             Determine(c.got)
-            assert.True(t, c.got.Equal(c.want))
+            assert.True(t, c.got.Equal(c.want), c.got.DOA())
         })
     }
 }

@@ -64,47 +64,40 @@ func calculateRemovingMask(m *nfa.Machine, toRemove tools.Set[common.State]) map
 }
 
 func applyMask(m *nfa.Machine, mask map[common.State]common.State) {
+    newDelta := make([]common.Transition, 0)
     for from := range m.Delta {
-        for _, to := range m.Delta[from] {
-            for x := range to {
-                if alias, found := mask[x]; found && alias != x {
-                    to.Delete(x)
-                    to.Insert(mask[x])
+        newFrom, found := mask[common.State(from)]
+        if !found {
+            continue
+        }
+        for by := range m.Delta[from] {
+            for to := range m.Delta[from][by] {
+                newTo, ok := mask[to]
+                if !ok {
+                    continue
                 }
+                newDelta = append(newDelta, common.Transition{From: newFrom, To: newTo, By: by})
             }
         }
     }
 
-    newDelta := make([]nfa.Transitions, len(mask))
-    for i := range newDelta {
-        newDelta[i] = make(nfa.Transitions, len(m.Delta[i]))
-    }
-    for i := range m.Delta {
-        alias, found := mask[common.State(i)]
-        if !found {
-            continue
-        }
-        newDelta[alias] = m.Delta[i]
-    }
-    m.Delta = newDelta
-
-    newStart := tools.NewSet[common.State]()
+    newStart := make([]common.State, 0)
     for s := range m.Start {
         alias, found := mask[s]
         if !found {
             continue
         }
-        newStart.Insert(alias)
+        newStart = append(newStart, alias)
     }
-    m.Start = newStart
 
-    newFinal := tools.NewSet[common.State]()
+    newFinal := make([]common.State, 0)
     for f := range m.Final {
         alias, found := mask[f]
         if !found {
             continue
         }
-        newFinal.Insert(alias)
+        newFinal = append(newFinal, alias)
     }
-    m.Final = newFinal
+
+    *m = *nfa.New(newStart, newFinal, newDelta)
 }

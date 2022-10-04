@@ -7,6 +7,7 @@ import (
 )
 
 // Determine build DFA, equal to the given NFA.
+// !!! You need to remove unused states after it explicitly !!!
 /*
    Algorithm:
        m       : given NFA
@@ -46,7 +47,9 @@ func Determine(m *nfa.Machine) {
     used := newStateSet(m.NStates())
     aliases := make(map[*internalState]common.State)
 
-    start := newInternalState(m)
+    Q := m.NStates()
+
+    start := newInternalState(Q)
     for s := range m.Start {
         if m.Final.Has(s) {
             start.Accept = true
@@ -68,7 +71,7 @@ func Determine(m *nfa.Machine) {
         for from := range q.Mask.Iterate() {
             for by, t := range m.Delta[from] {
                 if _, found := group[by]; !found {
-                    group[by] = newInternalState(m)
+                    group[by] = newInternalState(Q)
                 }
                 for to := range t {
                     group[by].Mask.Fix(int(to))
@@ -83,27 +86,19 @@ func Determine(m *nfa.Machine) {
                 queue.Push(next)
                 if next.Mask.Count() > 1 {
                     aliases[next] = addState(m, next)
-                    if next.Accept {
-                        m.Final.Insert(aliases[next])
-                    }
                 }
             }
         }
     }
 
-    for i, transitions := range m.Delta { // update ingoing edges to new states
+    for i := range m.Delta { // update ingoing edges to new states
         bySym := make(map[common.Word]*internalState, 0)
-        for w, dst := range transitions {
+        for w := range m.Delta[i] {
             if _, found := bySym[w]; !found {
-                bySym[w] = newInternalState(m)
+                bySym[w] = newInternalState(Q)
             }
-            for s := range dst {
+            for s := range m.Delta[i][w] {
                 bySym[w].Mask.Fix(int(s))
-            }
-        }
-        for w, dst := range transitions {
-            if dst.Size() > 1 {
-                delete(m.Delta[i], w)
             }
         }
         for w, s := range bySym {
@@ -166,9 +161,9 @@ func (s *stateSet) Find(state *internalState) *internalState {
     return nil
 }
 
-func newInternalState(m *nfa.Machine) *internalState {
+func newInternalState(k int) *internalState {
     return &internalState{
-        Mask:   tools.NewBitset(m.NStates()),
+        Mask:   tools.NewBitset(k),
         Accept: false,
     }
 }

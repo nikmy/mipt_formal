@@ -84,7 +84,7 @@ func (bs *Bitset) All() bool {
 }
 
 func (bs *Bitset) Iterate() chan int {
-    ch := make(chan int, 1)
+    ch := make(chan int)
     go func() {
         for i := 0; i < (len(bs.data)-1)*64+bs.lastBucketSize; i++ {
             if bs.Get(i) {
