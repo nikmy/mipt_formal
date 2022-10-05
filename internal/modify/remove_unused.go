@@ -23,13 +23,13 @@ func RemoveUnusedStates(stateMachine *nfa.Machine) {
     removeUnusedStates(stateMachine, unused)
 }
 
-func findUnusedDFS(s common.State, visited []bool, m *nfa.Machine) {
-    if visited[s] {
+func findUnusedDFS(state common.State, visited []bool, m *nfa.Machine) {
+    if visited[state] {
         return
     }
-    visited[s] = true
+    visited[state] = true
 
-    for _, children := range m.Delta[s] {
+    for _, children := range m.Delta[state] {
         for child := range children {
             findUnusedDFS(child, visited, m)
         }
@@ -99,5 +99,5 @@ func applyMask(m *nfa.Machine, mask map[common.State]common.State) {
         newFinal = append(newFinal, alias)
     }
 
-    *m = *nfa.New(newStart, newFinal, newDelta)
+    *m = *nfa.NewMachine(newStart, newFinal, newDelta)
 }

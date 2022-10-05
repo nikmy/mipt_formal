@@ -8,8 +8,8 @@ import (
 func Reverse(m *nfa.Machine) {
     invDelta := make([]common.Transition, 0, len(m.Delta))
     for to := range m.Delta {
-        for by, dst := range m.Delta[to] {
-            for from := range dst {
+        for by := range m.Delta[to] {
+            for from := range m.Delta[to][by] {
                 invDelta = append(invDelta, common.Transition{
                     From: from,
                     To:   common.State(to),
@@ -19,5 +19,5 @@ func Reverse(m *nfa.Machine) {
         }
     }
 
-    *m = *nfa.New(m.Final.AsSlice(), m.Start.AsSlice(), invDelta)
+    *m = *nfa.NewMachine(m.Final.AsSlice(), m.Start.AsSlice(), invDelta)
 }

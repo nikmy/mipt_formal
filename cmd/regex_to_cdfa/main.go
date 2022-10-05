@@ -1,39 +1,39 @@
 package main
 
 import (
-    "errors"
-    "fmt"
-    "log"
+	"errors"
+	"fmt"
+	"log"
 
-    "mipt_formal/pkg/tools"
+	"mipt_formal/pkg/tools"
 )
 
 func main() {
-    re, alpha, err := getInput()
-    if err != nil {
-        log.Fatal(err)
-    }
+	regExpr, alphabet, err := getInput()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    a := tools.RegexToCDFA(re, alpha)
-    fmt.Println(a)
+	outputDOA := tools.RegexToCDFA(regExpr, alphabet)
+	fmt.Println(outputDOA)
 }
 
 func getInput() (re string, alpha string, err error) {
-    var n int
-    fmt.Print("[INPUT] Enter alphabet: ")
-    n, err = fmt.Scanf("%s\n", &alpha)
-    if err == nil && n == 0 {
-        err = errors.New("empty alphabet")
-    }
-    if err != nil {
-        return "", "", err
-    }
+	var bytesRead int
+	fmt.Print("[INPUT] Enter alphabet: ")
+	bytesRead, err = fmt.Scanf("%s\n", &alpha)
+	if err == nil && bytesRead == 0 {
+		err = errors.New("empty alphabet")
+	}
+	if err != nil {
+		return "", "", err
+	}
 
-    fmt.Print("[INPUT] Enter regular expression: ")
-    _, err = fmt.Scanf("%s\n", &re)
-    if err != nil {
-        return "", "", err
-    }
+	fmt.Print("[INPUT] Enter regular expression: ")
+	_, err = fmt.Scanf("%s\n", &re)
+	if err != nil {
+		return "", "", err
+	}
 
-    return
+	return
 }

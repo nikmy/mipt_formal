@@ -18,8 +18,8 @@ func buildTransitiveEpsilonClosure(m *nfa.Machine) {
     newEdges := true
     for newEdges {
         newEdges = false
-        for i, t := range m.Delta {
-            for j := range t[common.Epsilon] {
+        for i := range m.Delta {
+            for j := range m.Delta[i][common.Epsilon] {
                 for k := range m.Delta[j][common.Epsilon] {
                     if m.AddTransition(common.State(i), k, common.Epsilon) {
                         newEdges = true
@@ -34,11 +34,11 @@ func compressAcceptances(m *nfa.Machine) {
     newAccept := true
     for newAccept {
         newAccept = false
-        for i, t := range m.Delta {
-            s := common.State(i)
-            for j := range t[common.Epsilon] {
-                if m.Final.Has(j) {
-                    if m.Final.Insert(s) {
+        for i := range m.Delta {
+            from := common.State(i)
+            for to := range m.Delta[i][common.Epsilon] {
+                if m.Final.Has(to) {
+                    if m.Final.Insert(from) {
                         newAccept = true
                     }
                 }
@@ -48,11 +48,11 @@ func compressAcceptances(m *nfa.Machine) {
 }
 
 func addTransitiveEdges(m *nfa.Machine) {
-    for i, t := range m.Delta {
-        for j := range t[common.Epsilon] {
-            for w, tt := range m.Delta[j] {
-                for k := range tt {
-                    m.AddTransition(common.State(i), k, w)
+    for i := range m.Delta {
+        for j := range m.Delta[i][common.Epsilon] {
+            for word := range m.Delta[j] {
+                for k := range m.Delta[j][word] {
+                    m.AddTransition(common.State(i), k, word)
                 }
             }
         }
@@ -60,7 +60,7 @@ func addTransitiveEdges(m *nfa.Machine) {
 }
 
 func removeEpsilonMoves(m *nfa.Machine) {
-    for i := range m.Delta {
-        delete(m.Delta[i], common.Epsilon)
+    for state := range m.Delta {
+        delete(m.Delta[state], common.Epsilon)
     }
 }

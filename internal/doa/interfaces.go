@@ -1,9 +1,9 @@
 package doa
 
 type serializable interface {
-    DOA() string
+	DOA() string
 }
 
 type Writer interface {
-    Write(serializable) error
+	Write(serializable) error
 }

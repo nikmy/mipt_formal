@@ -6,7 +6,7 @@ type Word string
 const Epsilon Word = "@"
 
 type Transition struct {
-    From State
-    To   State
-    By   Word
+	From State
+	To   State
+	By   Word
 }

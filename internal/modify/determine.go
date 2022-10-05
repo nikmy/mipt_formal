@@ -47,14 +47,14 @@ func Determine(m *nfa.Machine) {
     used := newStateSet(m.NStates())
     aliases := make(map[*internalState]common.State)
 
-    Q := m.NStates()
+    nStates := m.NStates()
 
-    start := newInternalState(Q)
-    for s := range m.Start {
-        if m.Final.Has(s) {
+    start := newInternalState(nStates)
+    for state := range m.Start {
+        if m.Final.Has(state) {
             start.Accept = true
         }
-        start.Mask.Fix(int(s))
+        start.Mask.Fix(int(state))
     }
     if start.Mask.Count() > 1 {
         newStart := addState(m, start)
@@ -66,14 +66,14 @@ func Determine(m *nfa.Machine) {
     queue.Push(start)
 
     for !queue.Empty() {
-        q := queue.Pop()
+        state := queue.Pop()
         group := make(map[common.Word]*internalState, 0)
-        for from := range q.Mask.Iterate() {
-            for by, t := range m.Delta[from] {
+        for from := range state.Mask.Iterate() {
+            for by := range m.Delta[from] {
                 if _, found := group[by]; !found {
-                    group[by] = newInternalState(Q)
+                    group[by] = newInternalState(nStates)
                 }
-                for to := range t {
+                for to := range m.Delta[from][by] {
                     group[by].Mask.Fix(int(to))
                     if m.Final.Has(to) {
                         group[by].Accept = true
@@ -93,34 +93,34 @@ func Determine(m *nfa.Machine) {
 
     for i := range m.Delta { // update ingoing edges to new states
         bySym := make(map[common.Word]*internalState, 0)
-        for w := range m.Delta[i] {
-            if _, found := bySym[w]; !found {
-                bySym[w] = newInternalState(Q)
+        for word := range m.Delta[i] {
+            if _, found := bySym[word]; !found {
+                bySym[word] = newInternalState(nStates)
             }
-            for s := range m.Delta[i][w] {
-                bySym[w].Mask.Fix(int(s))
+            for state := range m.Delta[i][word] {
+                bySym[word].Mask.Fix(int(state))
             }
         }
-        for w, s := range bySym {
-            if s.Mask.Count() <= 1 { // skip old states
+        for word, state := range bySym {
+            if state.Mask.Count() <= 1 { // skip old states
                 continue
             }
-            p := used.Find(s)
+            p := used.Find(state)
             if p == nil { // skip unused states
                 continue
             }
             newTo := aliases[p]
-            m.Delta[i][w] = tools.NewSet[common.State](newTo)
+            m.Delta[i][word] = tools.NewSet[common.State](newTo)
         }
     }
 }
 
 func addState(m *nfa.Machine, state *internalState) common.State {
     newState := m.AddState()
-    for i := range state.Mask.Iterate() { // add outgoing edges from new state
-        for w, dst := range m.Delta[i] {
-            for s := range dst {
-                m.AddTransition(newState, s, w)
+    for from := range state.Mask.Iterate() { // add outgoing edges from new state
+        for word := range m.Delta[from] {
+            for to := range m.Delta[from][word] {
+                m.AddTransition(newState, to, word)
             }
         }
     }
@@ -161,9 +161,9 @@ func (s *stateSet) Find(state *internalState) *internalState {
     return nil
 }
 
-func newInternalState(k int) *internalState {
+func newInternalState(nStates int) *internalState {
     return &internalState{
-        Mask:   tools.NewBitset(k),
+        Mask:   tools.NewBitset(nStates),
         Accept: false,
     }
 }
