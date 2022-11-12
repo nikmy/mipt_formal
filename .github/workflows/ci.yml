@@ -23,9 +23,9 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: '1.19.1'
-      - name: Tests with coverage
-        run: go test mipt_formal/internal/modify -coverprofile="out.cov"
+      - name: Tests with coverage for auto
+        run: go test mipt_formal/auto/internal/modify -coverprofile="out.cov"
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3
         with:
-          path: out.cov
+          path: auto_out.cov
