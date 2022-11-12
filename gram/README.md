@@ -4,7 +4,9 @@
 
 ### Grammar
 
-**Only CF-grammars are supported**
+- **Only CF-grammars are supported**
+- **S is start symbol**
+- **_ is empty word**
 
 ```
   |   alternation
@@ -13,8 +15,9 @@
  { }  repeating
 
 non-terminal ::= A | B | ... | Z
-terminal     ::= a | b | ... | z
-rule         ::= non-terminal . " ::= " . { non-terminal | terminal }
+terminal     ::= a | b | ... | z | _
+rule         ::= non-terminal . " -> " . { non-terminal | terminal } . "\n"
+grammar      ::= "S" . " ::= " . { non-terminal | terminal } . "\n" . { rule }
 ```
 
 ## Parsers
