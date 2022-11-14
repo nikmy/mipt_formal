@@ -1,4 +1,4 @@
-package cfgram
+package cf
 
 import (
     "bytes"
@@ -41,26 +41,26 @@ func ParseGrammar(in reader) (*Grammar, error) {
         if len(left) != 1 || !isNonTerminal(left[0]) {
             return nil, wrongRule(common.Errorf("left side must be single non-terminal"))
         }
-        if lineNumber == 1 && left[0] != 'S' {
+        if lineNumber == 1 && left[0] != byte(Start) {
             return nil, wrongRule(common.Error("first rule must contain S in left side"))
         }
-        l := NonTerminal(left[0])
+        l := left[0]
 
         if len(right) == 0 {
             return nil, wrongRule(common.Errorf("right side must be not empty"))
         }
 
-        r := make([]Symbol, 0, len(right))
+        r := make([]byte, 0, len(right))
         for _, sym := range right {
             if !isTerminal(sym) && !isNonTerminal(sym) {
                 return nil, wrongRule(common.Errorf("unexpected symbol '%v'", sym))
             }
-            r = append(r, Symbol(sym))
+            r = append(r, sym)
         }
 
         rules = append(rules, Rule{
             Left:  l,
-            Right: r,
+            Right: string(r),
         })
 
         lineNumber++

@@ -42,3 +42,24 @@ func (r *StdinLineReader) scan() error {
     r.buf = bytes.Split([]byte(s), []byte("\n"))
     return nil
 }
+
+func NewStringsReader(lines []string) *StringsReader {
+    return &StringsReader{
+        lines: lines,
+        index: 0,
+    }
+}
+
+type StringsReader struct {
+    lines []string
+    index int
+}
+
+func (r *StringsReader) ReadLine() ([]byte, error) {
+    if r.index == len(r.lines) {
+        return nil, io.EOF
+    }
+    next := r.lines[r.index]
+    r.index++
+    return []byte(next), nil
+}
