@@ -6,15 +6,14 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "gram" ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
+  run_tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,8 +23,10 @@ jobs:
         with:
           go-version: '1.19.1'
       - name: Tests with coverage for auto
-        run: go test mipt_formal/auto/internal/modify -coverprofile="out.cov"
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v3
-        with:
-          path: auto_out.cov
+        run: go test mipt_formal/auto/internal/modify -coverprofile="auto_out.cov"
+      - name: Tests with coverage for gram
+        run: go test mipt_formal/gram/internal/cf -coverprofile="gram_out.cov"
+      - name: Tests with coverage for CYK
+        run: go test mipt_formal/gram/internal/parsers -coverprofile="cyk_out.cov"
+      - name: Tests with coverage for Chomsky Normalization
+        run: go test mipt_formal/gram/internal/modify -coverprofile="cyk_out.cov"

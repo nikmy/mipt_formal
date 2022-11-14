@@ -1,4 +1,4 @@
-package cfgram
+package cf
 
 import (
     "bytes"
@@ -61,12 +61,12 @@ func TestParseGrammar(t *testing.T) {
             want: &Grammar{
                 Rules: []Rule{
                     {
-                        Left:  NonTerminal('S'),
-                        Right: []Symbol{Symbol('a'), Symbol('S')},
+                        Left:  Start,
+                        Right: "aS",
                     },
                     {
-                        Left:  NonTerminal('S'),
-                        Right: []Symbol{Epsilon},
+                        Left:  Start,
+                        Right: "",
                     },
                 }},
         },
