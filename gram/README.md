@@ -21,3 +21,12 @@ grammar      ::= "S" . " ::= " . { non-terminal | terminal } . "\n" . { rule }
 ```
 
 ## Parsers
+
+### CYK (Cocke-Younger-Kasami) algorithm
+
+- **Input:**
+  - context-free grammar in Chomsky Normal Form
+  - word
+- **Returns:**
+  - whether the word is member of language
+- **Time complexity:**: $O(|w|^3|P|)$
