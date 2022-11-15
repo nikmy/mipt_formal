@@ -1,8 +1,8 @@
 package modify
 
 import (
-    "mipt_formal/internal/common"
-    "mipt_formal/internal/nfa"
+    "mipt_formal/auto/internal/common"
+    "mipt_formal/auto/internal/nfa"
 )
 
 func Reverse(m *nfa.Machine) {
