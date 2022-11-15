@@ -2,11 +2,11 @@ package nfa
 
 import (
     "fmt"
+    "mipt_formal/tools"
     "strings"
 
     "mipt_formal/auto/internal/common"
     "mipt_formal/auto/internal/doa"
-    "mipt_formal/auto/internal/tools"
 )
 
 type Transitions map[common.Word]tools.Set[common.State]

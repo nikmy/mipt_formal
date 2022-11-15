@@ -3,7 +3,7 @@ package modify
 import (
     "mipt_formal/auto/internal/common"
     "mipt_formal/auto/internal/nfa"
-    "mipt_formal/auto/internal/tools"
+    "mipt_formal/tools"
 )
 
 var _ Modifier = RemoveUnusedStates

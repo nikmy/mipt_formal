@@ -14,3 +14,7 @@ type Rule struct {
     Left  byte
     Right string
 }
+
+func IsNonTerminal(symbol byte) bool {
+    return symbol >= 'A' && symbol <= 'Z'
+}

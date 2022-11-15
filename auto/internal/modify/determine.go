@@ -3,7 +3,7 @@ package modify
 import (
     "mipt_formal/auto/internal/common"
     "mipt_formal/auto/internal/nfa"
-    "mipt_formal/auto/internal/tools"
+    tools2 "mipt_formal/tools"
 )
 
 // Determine build DFA, equal to the given NFA.
@@ -42,7 +42,7 @@ import (
        T(all) := O(2^n * (n * k + n * 2^n / 64)) = O(n * 2^n), const = |A| * 2^(-n) + 1 / 64
 */
 func Determine(m *nfa.Machine) {
-    queue := tools.NewQueue[*internalState]()
+    queue := tools2.NewQueue[*internalState]()
 
     used := newStateSet(m.NStates())
     aliases := make(map[*internalState]common.State)
@@ -59,7 +59,7 @@ func Determine(m *nfa.Machine) {
     if start.Mask.Count() > 1 {
         newStart := addState(m, start)
         aliases[start] = newStart
-        m.Start = tools.NewSet[common.State](newStart)
+        m.Start = tools2.NewSet[common.State](newStart)
     }
 
     used.TryInsert(start)
@@ -110,7 +110,7 @@ func Determine(m *nfa.Machine) {
                 continue
             }
             newTo := aliases[p]
-            m.Delta[i][word] = tools.NewSet[common.State](newTo)
+            m.Delta[i][word] = tools2.NewSet[common.State](newTo)
         }
     }
 }
@@ -163,12 +163,12 @@ func (s *stateSet) Find(state *internalState) *internalState {
 
 func newInternalState(nStates int) *internalState {
     return &internalState{
-        Mask:   tools.NewBitset(nStates),
+        Mask:   tools2.NewBitset(nStates),
         Accept: false,
     }
 }
 
 type internalState struct {
-    Mask   *tools.Bitset
+    Mask   *tools2.Bitset
     Accept bool
 }
