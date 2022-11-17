@@ -15,6 +15,6 @@ type Rule struct {
     Right string
 }
 
-func IsNonTerminal(symbol byte) bool {
-    return symbol >= 'A' && symbol <= 'Z'
+func IsTerminal(symbol byte) bool {
+    return symbol == Epsilon || (symbol >= 'a' && symbol <= 'z')
 }

@@ -7,7 +7,7 @@ import (
 
 func (n *ChomskyNormalizer) removeLong() {
     producers := make(map[string]byte) // Sigma x Sigma -> N
-    N := tools.NewStack[byte](n.nonTerminalsFreeList.AsSlice()...)
+    N := n.nonTerminalsFreeList
 
     newRules := make([]cf.Rule, 0, len(n.grammar.Rules))
     for _, rule := range n.grammar.Rules {
@@ -18,20 +18,22 @@ func (n *ChomskyNormalizer) removeLong() {
 
         // fill rules chain from the end to avoid repeats
         toSplit := tools.NewStack[byte]()
-        for i := len(rule.Right) - 3; i > 0; i-- {
+        for i := 0; i < len(rule.Right)-2; i++ {
             toSplit.Push(rule.Right[i])
         }
 
         nextRight := rule.Right[len(rule.Right)-2:]
         for {
             producer, known := producers[nextRight]
+            if toSplit.Empty() {
+                producer, known = rule.Left, true
+            }
             if !known {
                 if N.Empty() {
                     panic("not enough symbols is non-terminals alphabet")
                 }
                 producer = N.Pop()
                 producers[nextRight] = producer
-                n.nonTerminalsFreeList.Delete(producer)
             }
             newRules = append(newRules, cf.Rule{
                 Left:  producer,
@@ -45,4 +47,5 @@ func (n *ChomskyNormalizer) removeLong() {
             nextRight = string([]byte{toSplit.Pop(), producer})
         }
     }
+    n.grammar.Rules = newRules
 }

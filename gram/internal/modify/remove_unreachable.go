@@ -23,7 +23,7 @@ func (n *ChomskyNormalizer) removeUnreachable() {
             prodGraph[rule.Left] = make([]byte, 0)
         }
         for _, symbol := range []byte(rule.Right) {
-            if cf.IsNonTerminal(symbol) {
+            if !cf.IsTerminal(symbol) {
                 prodGraph[rule.Left] = append(prodGraph[rule.Left], symbol)
             }
         }

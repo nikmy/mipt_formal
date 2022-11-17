@@ -15,13 +15,20 @@ func (n *ChomskyNormalizer) removeUnit() {
     for left, rights := range children {
         newRights := make([][]byte, 0, len(rights))
         for _, right := range rights {
-            if len(right) == 0 && cf.IsNonTerminal(right[0]) {
+            if len(right) == 1 && !cf.IsTerminal(right[0]) {
                 q := tools.NewQueue[byte](right[0])
                 for !q.Empty() {
                     next := q.Pop()
                     for _, transitiveRight := range children[next] {
                         if len(transitiveRight) > 1 {
                             newRights = append(newRights, transitiveRight)
+                            continue
+                        }
+                        if cf.IsTerminal(transitiveRight[0]) {
+                            newRights = append(newRights, transitiveRight)
+                            continue
+                        }
+                        if transitiveRight[0] == next { // avoid loops
                             continue
                         }
                         q.Push(transitiveRight[0])
@@ -40,4 +47,6 @@ func (n *ChomskyNormalizer) removeUnit() {
     }
 
     n.grammar.Rules = newRules
+
+    n.removeUnreachable()
 }

@@ -12,7 +12,7 @@ func (n *ChomskyNormalizer) removeNonGenerative() {
     for i, rule := range n.grammar.Rules {
         nonGenRight = append(nonGenRight, tools.NewSet[byte]())
         for _, symbol := range []byte(rule.Right) {
-            if cf.IsNonTerminal(symbol) && !generative.Has(symbol) {
+            if !cf.IsTerminal(symbol) && !generative.Has(symbol) {
                 nonGenRight[i].Insert(symbol)
             }
         }
@@ -23,6 +23,7 @@ func (n *ChomskyNormalizer) removeNonGenerative() {
 
     newGenerative := !generative.Empty()
     for newGenerative {
+        newGenerative = false
         for i, rule := range n.grammar.Rules {
             if generative.Has(rule.Left) {
                 continue
@@ -43,4 +44,23 @@ func (n *ChomskyNormalizer) removeNonGenerative() {
             }
         }
     }
+
+    newRules := make([]cf.Rule, 0, len(n.grammar.Rules))
+    for _, rule := range n.grammar.Rules {
+        if !generative.Has(rule.Left) {
+            continue
+        }
+        skipRule := false
+        for _, symbol := range []byte(rule.Right) {
+            if !cf.IsTerminal(symbol) && !generative.Has(symbol) {
+                skipRule = true
+                break
+            }
+        }
+
+        if !skipRule {
+            newRules = append(newRules, rule)
+        }
+    }
+    n.grammar.Rules = newRules
 }

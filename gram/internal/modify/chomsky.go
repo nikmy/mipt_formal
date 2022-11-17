@@ -1,34 +1,41 @@
 package modify
 
 import (
+    "sort"
+
     "mipt_formal/gram/internal/cf"
     "mipt_formal/tools"
 )
 
 func NewChomskyNormalizer(g *cf.Grammar) *ChomskyNormalizer {
     needHandleNull := false
-    freelist := tools.NewSet[byte]([]byte("ABCDEFGHIJKLMNOPQRTUVWXYZ")...)
+    freeNonTerminals := tools.NewSet[byte]([]byte("ABCDEFGHIJKLMNOPQRTUVWXYZ")...)
     for _, rule := range g.Rules {
         if rule.Left == cf.Start && len(rule.Right) == 1 && rule.Right[0] == cf.Epsilon {
             needHandleNull = true
             break
         }
-        if freelist.Has(rule.Left) {
-            freelist.Delete(rule.Left)
+        if freeNonTerminals.Has(rule.Left) {
+            freeNonTerminals.Delete(rule.Left)
         }
     }
+
+    freelist := freeNonTerminals.AsSlice()
+    sort.Slice(freelist, func(i, j int) bool {
+        return freelist[i] < freelist[j]
+    })
 
     return &ChomskyNormalizer{
         grammar:              g,
         needHandleNull:       needHandleNull,
-        nonTerminalsFreeList: freelist,
+        nonTerminalsFreeList: tools.NewQueue[byte](freelist...),
     }
 }
 
 type ChomskyNormalizer struct {
     grammar              *cf.Grammar
     needHandleNull       bool
-    nonTerminalsFreeList tools.Set[byte]
+    nonTerminalsFreeList *tools.Queue[byte]
 }
 
 func (n *ChomskyNormalizer) Run() {
@@ -42,22 +49,22 @@ func (n *ChomskyNormalizer) Run() {
     n.removeNullProductive()
     n.handleNull()
     n.removeUnit()
+
+    n.grammar.Rules = n.grammar.Rules[:len(n.grammar.Rules):len(n.grammar.Rules)] // shrink to fit
 }
 
 func (n *ChomskyNormalizer) checkNF() bool {
     for _, rule := range n.grammar.Rules {
-        if len(rule.Right) > 2 {
-            return false
-        }
-        if len(rule.Right) == 1 {
-            if cf.IsNonTerminal(rule.Right[0]) {
+        if len(rule.Right) == 1 && cf.IsTerminal(rule.Right[0]) {
+            if rule.Right[0] == cf.Epsilon && rule.Left != cf.Start {
                 return false
             }
-        } else {
-            if !cf.IsNonTerminal(rule.Right[0]) || !cf.IsNonTerminal(rule.Right[1]) {
-                return false
-            }
+            continue
         }
+        if len(rule.Right) == 2 && !cf.IsTerminal(rule.Right[0]) && !cf.IsTerminal(rule.Right[1]) {
+            continue
+        }
+        return false
     }
     return true
 }
