@@ -30,3 +30,7 @@ grammar      ::= "S" . " ::= " . { non-terminal | terminal } . "\n" . { rule }
 - **Returns:**
   - whether the word is member of language
 - **Time complexity:**: $O(|w|^3|P|)$
+- **Program**
+  - `main.go`: `cmd/cyk_parser/main.go`
+  - Usage: `./cyk_parser <grammar_file> <words_file>`
+  - Produce: `output.cyk` file with filtered words from `<words_file>`

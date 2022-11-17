@@ -42,9 +42,6 @@ func (n *ChomskyNormalizer) removeNullProductive() {
         if len(rule.Right) == 2 {
             leftNull := nullProductive.Has(rule.Right[0])
             rightNull := nullProductive.Has(rule.Right[1])
-            if leftNull && rightNull {
-                continue
-            }
             if !leftNull && !rightNull {
                 newRules = append(newRules, rule)
                 continue
@@ -54,12 +51,14 @@ func (n *ChomskyNormalizer) removeNullProductive() {
                     Left:  rule.Left,
                     Right: rule.Right[1:],
                 })
-                continue
             }
-            newRules = append(newRules, cf.Rule{
-                Left:  rule.Left,
-                Right: rule.Right[:1],
-            })
+            if rightNull {
+                newRules = append(newRules, cf.Rule{
+                    Left:  rule.Left,
+                    Right: rule.Right[:1],
+                })
+            }
+            newRules = append(newRules, rule)
             continue
         }
 
