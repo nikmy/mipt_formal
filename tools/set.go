@@ -31,7 +31,7 @@ func (s Set[T]) Delete(key T) {
     delete(s, key)
 }
 
-func (s Set[T]) IsEmpty() bool {
+func (s Set[T]) Empty() bool {
     return s.Size() == 0
 }
 

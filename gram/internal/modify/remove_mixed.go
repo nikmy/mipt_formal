@@ -5,18 +5,11 @@ import (
     "mipt_formal/tools"
 )
 
-func removeMixed(g *cf.Grammar) {
-    availableNonTerminals := tools.NewSet[byte]([]byte("ABCDEFGHIJKLMNOPQRTUVWXYZ")...)
-    for _, rule := range g.Rules {
-        if availableNonTerminals.Has(rule.Left) {
-            availableNonTerminals.Delete(rule.Left)
-        }
-    }
-    N := tools.StackFromSlice(availableNonTerminals.AsSlice())
-    availableNonTerminals = nil
+func (n *ChomskyNormalizer) removeMixed() {
     producers := make(map[byte]byte) // Sigma -> N
+    N := tools.NewStack[byte](n.nonTerminalsFreeList.AsSlice()...)
 
-    for _, rule := range g.Rules {
+    for i, rule := range n.grammar.Rules {
         hasTerminals, hasNonTerminals, isMixed := false, false, false
         for _, symbol := range []byte(rule.Right) {
             if cf.IsNonTerminal(symbol) {
@@ -45,11 +38,12 @@ func removeMixed(g *cf.Grammar) {
                         }
                         producer = N.Pop()
                         producers[symbol] = producer
+                        n.nonTerminalsFreeList.Delete(producer)
                     }
                     newRight = append(newRight, producer)
                 }
             }
-            rule.Right = string(newRight)
+            n.grammar.Rules[i].Right = string(newRight)
         }
     }
 }

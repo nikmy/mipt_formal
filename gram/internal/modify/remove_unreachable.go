@@ -15,10 +15,10 @@ func findUnreachableDFS(prodGraph map[byte][]byte, current byte, visited tools.S
     }
 }
 
-func removeUnreachable(g *cf.Grammar) {
+func (n *ChomskyNormalizer) removeUnreachable() {
     prodGraph := make(map[byte][]byte)
     visited := tools.NewSet[byte]()
-    for _, rule := range g.Rules {
+    for _, rule := range n.grammar.Rules {
         if _, known := prodGraph[rule.Left]; !known {
             prodGraph[rule.Left] = make([]byte, 0)
         }
@@ -29,15 +29,15 @@ func removeUnreachable(g *cf.Grammar) {
         }
     }
     findUnreachableDFS(prodGraph, cf.Start, visited)
-    if visited.Size() == len(g.Rules) {
+    if visited.Size() == len(n.grammar.Rules) {
         return
     }
 
     newRules := make([]cf.Rule, 0, visited.Size())
-    for _, rule := range g.Rules {
+    for _, rule := range n.grammar.Rules {
         if visited.Has(rule.Left) {
             newRules = append(newRules, rule)
         }
     }
-    g.Rules = newRules
+    n.grammar.Rules = newRules
 }
