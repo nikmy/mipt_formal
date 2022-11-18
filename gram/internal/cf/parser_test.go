@@ -66,7 +66,7 @@ func TestParseGrammar(t *testing.T) {
                     },
                     {
                         Left:  Start,
-                        Right: "_",
+                        Right: "",
                     },
                 }},
         },

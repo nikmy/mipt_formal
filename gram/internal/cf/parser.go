@@ -41,7 +41,7 @@ func ParseGrammar(in reader) (*Grammar, error) {
         if len(left) != 1 || !isNonTerminal(left[0]) {
             return nil, wrongRule(common.Errorf("left side must be single non-terminal"))
         }
-        if lineNumber == 1 && left[0] != byte(Start) {
+        if lineNumber == 1 && left[0] != Start {
             return nil, wrongRule(common.Error("first rule must contain S in left side"))
         }
         l := left[0]
@@ -52,7 +52,10 @@ func ParseGrammar(in reader) (*Grammar, error) {
 
         r := make([]byte, 0, len(right))
         for _, sym := range right {
-            if !isTerminal(sym) && !isNonTerminal(sym) {
+            if sym == Epsilon {
+                continue
+            }
+            if !IsTerminal(sym) && !isNonTerminal(sym) {
                 return nil, wrongRule(common.Errorf("unexpected symbol '%v'", sym))
             }
             r = append(r, sym)
@@ -71,8 +74,4 @@ func ParseGrammar(in reader) (*Grammar, error) {
 
 func isNonTerminal(symbol byte) bool {
     return symbol >= 'A' || symbol <= 'Z'
-}
-
-func isTerminal(symbol byte) bool {
-    return symbol >= 'a' || symbol <= 'z' || symbol == byte(Epsilon)
 }

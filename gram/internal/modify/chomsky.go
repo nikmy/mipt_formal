@@ -11,7 +11,7 @@ func NewChomskyNormalizer(g *cf.Grammar) *ChomskyNormalizer {
     needHandleNull := false
     freeNonTerminals := tools.NewSet[byte]([]byte("ABCDEFGHIJKLMNOPQRTUVWXYZ")...)
     for _, rule := range g.Rules {
-        if rule.Left == cf.Start && len(rule.Right) == 1 && rule.Right[0] == cf.Epsilon {
+        if rule.Left == cf.Start && len(rule.Right) == 0 {
             needHandleNull = true
             break
         }
@@ -36,12 +36,14 @@ type ChomskyNormalizer struct {
     grammar              *cf.Grammar
     needHandleNull       bool
     nonTerminalsFreeList *tools.Queue[byte]
+    startAlias           byte
 }
 
 func (n *ChomskyNormalizer) Run() {
     if n == nil || n.grammar == nil || n.checkNF() { // lazy
         return
     }
+    n.addProxyStart()
     n.removeNonGenerative()
     n.removeUnreachable()
     n.removeMixed()
@@ -55,10 +57,14 @@ func (n *ChomskyNormalizer) Run() {
 
 func (n *ChomskyNormalizer) checkNF() bool {
     for _, rule := range n.grammar.Rules {
-        if len(rule.Right) == 1 && cf.IsTerminal(rule.Right[0]) {
-            if rule.Right[0] == cf.Epsilon && rule.Left != cf.Start {
+        if len(rule.Right) == 0 {
+            if rule.Left != cf.Start {
                 return false
             }
+            continue
+        }
+
+        if len(rule.Right) == 1 && cf.IsTerminal(rule.Right[0]) {
             continue
         }
         if len(rule.Right) == 2 && !cf.IsTerminal(rule.Right[0]) && !cf.IsTerminal(rule.Right[1]) {

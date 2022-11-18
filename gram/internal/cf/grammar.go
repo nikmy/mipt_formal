@@ -16,5 +16,5 @@ type Rule struct {
 }
 
 func IsTerminal(symbol byte) bool {
-    return symbol == Epsilon || (symbol >= 'a' && symbol <= 'z')
+    return symbol >= 'a' && symbol <= 'z'
 }

@@ -7,25 +7,26 @@ import (
 func CYK(g *cf.Grammar, word string) bool {
     dp := make(map[byte][][]bool, len(g.Rules))
 
-    singles := make(map[byte]byte)
+    singles := make(map[byte][]byte)
     bins := make([]cf.Rule, 0, 1)
 
     for _, rule := range g.Rules {
         if _, ok := dp[rule.Left]; !ok {
             dp[rule.Left] = make([][]bool, len(word))
             for i := range word {
-                dp[rule.Left][i] = make([]bool, len(word)+1)
+                dp[rule.Left][i] = make([]bool, len(word))
             }
         }
-        if len(rule.Right) == 1 {
-            if rule.Right[0] != cf.Epsilon {
-                singles[rule.Right[0]] = rule.Left
-            } else if len(word) == 0 {
-                // For 'S -> Epsilon' rule
+
+        switch len(rule.Right) {
+        case 2:
+            bins = append(bins, rule)
+        case 1:
+            singles[rule.Right[0]] = append(singles[rule.Right[0]], rule.Left)
+        case 0:
+            if len(word) == 0 {
                 return true
             }
-        } else {
-            bins = append(bins, rule)
         }
     }
 
@@ -35,8 +36,10 @@ func CYK(g *cf.Grammar, word string) bool {
 
     // fill base cases
     for i, s := range []byte(word) {
-        if producer, ok := singles[s]; ok {
-            dp[producer][i][i] = true
+        if producers, ok := singles[s]; ok {
+            for _, producer := range producers {
+                dp[producer][i][i] = true
+            }
         }
     }
 
@@ -44,7 +47,6 @@ func CYK(g *cf.Grammar, word string) bool {
         for i := 0; i < len(word)-m; i++ {
             j := i + m
 
-        loop:
             for _, binRule := range bins {
                 A := binRule.Left
                 B := binRule.Right[0]
@@ -52,12 +54,12 @@ func CYK(g *cf.Grammar, word string) bool {
                 for k := i; k < j; k++ {
                     if dp[B][i][k] && dp[C][k+1][j] {
                         dp[A][i][j] = true
-                        break loop
+                        break
                     }
                 }
             }
         }
     }
 
-    return dp[cf.Start][0][len(word)]
+    return dp[cf.Start][0][len(word)-1]
 }

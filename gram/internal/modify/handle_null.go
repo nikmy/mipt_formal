@@ -9,6 +9,10 @@ func (n *ChomskyNormalizer) handleNull() {
 
     n.grammar.Rules = append(n.grammar.Rules, cf.Rule{
         Left:  cf.Start,
-        Right: string([]byte{cf.Epsilon}),
+        Right: string(n.startAlias),
+    })
+    n.grammar.Rules = append(n.grammar.Rules, cf.Rule{
+        Left:  cf.Start,
+        Right: "",
     })
 }

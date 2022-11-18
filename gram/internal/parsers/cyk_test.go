@@ -1,6 +1,7 @@
 package parsers
 
 import (
+    "github.com/stretchr/testify/assert"
     "mipt_formal/gram/internal/cf"
     "mipt_formal/gram/internal/common"
     "testing"
@@ -40,12 +41,15 @@ func TestCYK(t *testing.T) {
             name: "correct bracket sequence",
             args: args{
                 rules: []string{
-                    "S -> AR",
-                    "R -> ST",
-                    "T -> BS",
-                    "A -> a",
-                    "B -> b",
                     "S -> _",
+                    "S -> BB",
+                    "S -> CD",
+                    "B -> BB",
+                    "B -> CD",
+                    "C -> a",
+                    "D -> BE",
+                    "D -> b",
+                    "E -> b",
                 },
                 words: []string{
                     "aabb",
@@ -62,38 +66,7 @@ func TestCYK(t *testing.T) {
             },
         },
         {
-            // S -> AT
-            // A -> aA  | Epsilon
-            // T -> aTb | Epsilon
             name: "just works",
-            args: args{
-                rules: []string{
-                    "S -> TR",
-                    "T -> AT",
-                    "T -> _",
-                    "A -> a",
-                    "R -> AU",
-                    "R -> _",
-                    "U -> RB",
-                    "B -> b",
-                    "S -> _",
-                },
-                words: []string{
-                    "aaaaabb",
-                    "baba",
-                    "aaabb",
-                    "ba",
-                },
-            },
-            want: []bool{
-                true,
-                false,
-                true,
-                false,
-            },
-        },
-        {
-            name: "just works 2",
             args: args{
                 rules: []string{
                     // S -> abcd
@@ -129,6 +102,9 @@ func TestCYK(t *testing.T) {
             got := make([]bool, 0, len(tc.args.words))
             for _, word := range tc.words {
                 got = append(got, CYK(g, word))
+            }
+            for i := range got {
+                assert.Equal(t, tc.want[i], got[i], tc.words[i])
             }
         })
     }

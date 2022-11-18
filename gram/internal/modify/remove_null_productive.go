@@ -9,7 +9,7 @@ func (n *ChomskyNormalizer) removeNullProductive() {
     // find all such E that E -> null
     nullProductive := tools.NewSet[byte]()
     for _, rule := range n.grammar.Rules {
-        if len(rule.Right) == 1 && rule.Right[0] == cf.Epsilon {
+        if len(rule.Right) == 0 {
             nullProductive.Insert(rule.Left)
             continue
         }
@@ -26,7 +26,7 @@ func (n *ChomskyNormalizer) removeNullProductive() {
             if len(rule.Right) == 1 && nullProductive.Has(rule.Right[0]) {
                 nullProductive.Insert(rule.Left)
                 newNullProductive = true
-                n.grammar.Rules[i].Right = string(cf.Epsilon)
+                n.grammar.Rules[i].Right = ""
                 continue
             }
         }
@@ -62,10 +62,11 @@ func (n *ChomskyNormalizer) removeNullProductive() {
             continue
         }
 
-        if len(rule.Right) != 1 {
+        if len(rule.Right) > 2 {
             panic("couldn't remove null productive: unexpected right rule: " + rule.Right)
         }
-        if rule.Right[0] != cf.Epsilon {
+
+        if len(rule.Right) == 1 {
             newRules = append(newRules, rule)
         }
     }
