@@ -16,9 +16,9 @@ func (n *ChomskyNormalizer) removeUnit() {
         newRights := make([][]byte, 0, len(rights))
         for _, right := range rights {
             if len(right) == 1 && !cf.IsTerminal(right[0]) {
-                q := tools.NewQueue[byte](right[0])
-                for !q.Empty() {
-                    next := q.Pop()
+                queue := tools.NewQueue[byte](right[0])
+                for !queue.Empty() {
+                    next := queue.Pop()
                     for _, transitiveRight := range children[next] {
                         if len(transitiveRight) > 1 {
                             newRights = append(newRights, transitiveRight)
@@ -31,7 +31,7 @@ func (n *ChomskyNormalizer) removeUnit() {
                         if transitiveRight[0] == next { // avoid loops
                             continue
                         }
-                        q.Push(transitiveRight[0])
+                        queue.Push(transitiveRight[0])
                     }
                 }
             } else {

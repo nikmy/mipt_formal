@@ -9,7 +9,7 @@ import (
 
 func NewChomskyNormalizer(g *cf.Grammar) *ChomskyNormalizer {
     needHandleNull := false
-    freeNonTerminals := tools.NewSet[byte]([]byte("ABCDEFGHIJKLMNOPQRTUVWXYZ")...)
+    freeNonTerminals := tools.NewSet[byte]([]byte(cf.NonTerminalsAlphabet)...)
     for _, rule := range g.Rules {
         if rule.Left == cf.Start && len(rule.Right) == 0 {
             needHandleNull = true
@@ -40,7 +40,7 @@ type ChomskyNormalizer struct {
 }
 
 func (n *ChomskyNormalizer) Run() {
-    if n == nil || n.grammar == nil || n.checkNF() { // lazy
+    if n == nil || n.grammar == nil || n.isNormalForm() { // lazy
         return
     }
     n.addProxyStart()
@@ -55,7 +55,7 @@ func (n *ChomskyNormalizer) Run() {
     n.grammar.Rules = n.grammar.Rules[:len(n.grammar.Rules):len(n.grammar.Rules)] // shrink to fit
 }
 
-func (n *ChomskyNormalizer) checkNF() bool {
+func (n *ChomskyNormalizer) isNormalForm() bool {
     for _, rule := range n.grammar.Rules {
         if len(rule.Right) == 0 {
             if rule.Left != cf.Start {

@@ -15,22 +15,7 @@ func (n *ChomskyNormalizer) removeNullProductive() {
         }
     }
 
-    // transitive closure: A -> ... -> E -> null cases
-    newNullProductive := !nullProductive.Empty()
-    for newNullProductive {
-        newNullProductive = false
-        for i, rule := range n.grammar.Rules {
-            if nullProductive.Has(rule.Left) {
-                continue
-            }
-            if len(rule.Right) == 1 && nullProductive.Has(rule.Right[0]) {
-                nullProductive.Insert(rule.Left)
-                newNullProductive = true
-                n.grammar.Rules[i].Right = ""
-                continue
-            }
-        }
-    }
+    n.nullClosure(nullProductive)
 
     if nullProductive.Has(cf.Start) {
         n.needHandleNull = true
@@ -72,4 +57,22 @@ func (n *ChomskyNormalizer) removeNullProductive() {
     }
 
     n.grammar.Rules = newRules
+}
+
+func (n *ChomskyNormalizer) nullClosure(nullProductive tools.Set[byte]) {
+    newNullProductive := !nullProductive.Empty()
+    for newNullProductive {
+        newNullProductive = false
+        for i, rule := range n.grammar.Rules {
+            if nullProductive.Has(rule.Left) {
+                continue
+            }
+            if len(rule.Right) == 1 && nullProductive.Has(rule.Right[0]) {
+                nullProductive.Insert(rule.Left)
+                newNullProductive = true
+                n.grammar.Rules[i].Right = ""
+                continue
+            }
+        }
+    }
 }
