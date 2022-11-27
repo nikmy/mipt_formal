@@ -1,114 +1,173 @@
 package parsers
 
 import (
+    "strings"
+
     "mipt_formal/gram/internal/cf"
     "mipt_formal/tools"
-    "strings"
 )
 
-func proxyStart(g *cf.Grammar) {
-    g.Rules = append(g.Rules, cf.Rule{
-        Left:  byte(1),
+const (
+    endOfString = byte(0)
+    fakeStart   = byte(1)
+)
+
+func addProxyStart(grammar *cf.Grammar) {
+    if grammar.Rules[0].Left == fakeStart {
+        return
+    }
+
+    grammar.Rules = append(grammar.Rules, cf.Rule{
+        Left:  fakeStart,
         Right: string(cf.Start),
     })
-    n := len(g.Rules) - 1
-    g.Rules[0], g.Rules[n] = g.Rules[n], g.Rules[0]
+    n := len(grammar.Rules) - 1
+    grammar.Rules[0], grammar.Rules[n] = grammar.Rules[n], grammar.Rules[0]
 
-    for i := range g.Rules {
-        g.Rules[i].Right = strings.Replace(g.Rules[i].Right, "_", "", -1)
+    for i := range grammar.Rules {
+        grammar.Rules[i].Right = strings.Replace(grammar.Rules[i].Right, "_", "", -1)
     }
 }
 
-func Earley(g *cf.Grammar, w string) bool {
-    proxyStart(g)
+func Earley(g *cf.Grammar, word string) bool {
+    addProxyStart(g)
 
-    D := make([]tools.Set[Situation], len(w)+1)
-    for i := range D {
-        D[i] = tools.NewSet[Situation]()
+    history := newSituationSet(len(word) + 1)
+    delta := newSituationSet(len(word) + 1)
+
+    history.Add(0, initSituation(g))
+    delta.Add(0, initSituation(g))
+
+    for delta.Size() > 0 {
+        nextDelta := newSituationSet(len(word) + 1)
+        predict(delta, history, 0, g, nextDelta)
+        complete(delta, history, 0, nextDelta)
+        delta = nextDelta
     }
-    D[0].Insert(InitSituation(g))
 
-    newSituations := 1
-    for newSituations > 0 {
-        newSituations = Predict(D, 0, g) + Complete(D, 0)
-    }
-
-    for i := 1; i < len(w)+1; i++ {
-        newSituations = Scan(D, i-1, w)
-        for newSituations > 0 {
-            newSituations = Predict(D, i, g)
-            newSituations += Complete(D, i)
+    for i := 1; i < len(word)+1; i++ {
+        delta = scan(history, i-1, word)
+        for delta.Size() > 0 {
+            nextDelta := newSituationSet(len(word) + 1)
+            predict(delta, history, i, g, nextDelta)
+            complete(delta, history, i, nextDelta)
+            delta = nextDelta
         }
     }
 
-    return D[len(w)].Has(FinalSituation(g))
+    return !history.Add(len(word), finalSituation(g))
 }
 
 /*
-	Scan
+	scan
 	  ( A -> u.xv , i ) in D[j]
 	 ----------------------------- w[j] = x
 	  ( A -> ux.v , i ) in D[j+1]
 */
-func Scan(D []tools.Set[Situation], j int, w string) int {
-    newSituations := 0
-    for situation := range D[j] {
-        if situation.Next() == w[j] {
-            if D[j+1].Insert(situation.ReadNext()) {
-                newSituations++
-            }
+func scan(history *situationSet, j int, w string) *situationSet {
+    delta := newSituationSet(len(w) + 1)
+    situations := history.Get(j, w[j])
+    for situation := range situations {
+        next := situation.ReadNext()
+        if history.Add(j+1, next) {
+            delta.Add(j+1, next)
         }
     }
-    return newSituations
+    return delta
 }
 
 /*
-	Predict
+	predict
 	  ( A -> u.Bv , i ) in D[j]
 	 --------------------------- (B -> t) in rules
 	  ( B -> .t , j ) in D[j]
 */
-func Predict(D []tools.Set[Situation], j int, g *cf.Grammar) int {
-    newSituations := 0
-    for situation := range D[j] {
-        for i, rule := range g.Rules {
-            if rule.Left == situation.Next() {
-                if D[j].Insert(ParseRule(&g.Rules[i], j)) {
-                    newSituations++
+func predict(delta *situationSet, history *situationSet, j int, g *cf.Grammar, newDelta *situationSet) {
+    for _, situations := range delta.GetMappedSet(j) {
+        for situation := range situations {
+            for i, rule := range g.Rules {
+                if rule.Left == situation.Next() {
+                    newSituation := parseRule(&g.Rules[i], j)
+                    if history.Add(j, newSituation) {
+                        newDelta.Add(j, newSituation)
+                    }
                 }
             }
         }
     }
-    return newSituations
 }
 
 /*
-	Complete
+	complete
 	  ( B -> t. , k ) in D[j]
 	 --------------------------- ( A -> u.Bv , i ) in D[k]
 	  ( A -> uB.v , i ) in D[j]
 */
-func Complete(D []tools.Set[Situation], j int) int {
-    newSituations := 0
-    for curr := range D[j] {
-        if !curr.Finished() {
-            continue
-        }
+func complete(delta *situationSet, history *situationSet, j int, newDelta *situationSet) {
+    for _, situations := range delta.GetMappedSet(j) {
+        for situation := range situations {
+            if !situation.Finished() {
+                continue
+            }
 
-        k := curr.NextPos()
-        for prev := range D[k] {
-            if curr.Rule.Left == prev.Next() {
-                cand := prev.ReadNext()
-                if D[j].Insert(cand) {
-                    newSituations++
+            k := situation.NextPos()
+            parents, exists := history.GetMappedSet(k)[situation.Rule.Left]
+            if !exists {
+                continue
+            }
+            for parent := range parents {
+                if situation.Rule.Left == parent.Next() {
+                    cand := parent.ReadNext()
+                    if history.Add(j, cand) {
+                        newDelta.Add(j, cand)
+                    }
                 }
             }
         }
     }
-    return newSituations
 }
 
-type Situation struct {
+func newSituationSet(nSets int) *situationSet {
+    data := make([]map[byte]tools.Set[earleySituation], nSets)
+    for i := range data {
+        data[i] = make(map[byte]tools.Set[earleySituation])
+    }
+    return &situationSet{
+        data: data,
+        size: 0,
+    }
+}
+
+type situationSet struct {
+    data []map[byte]tools.Set[earleySituation]
+    size int
+}
+
+func (s *situationSet) Size() int {
+    return s.size
+}
+
+func (s *situationSet) Add(setID int, situation earleySituation) bool {
+    nextSymbol := situation.Next()
+    if _, has := s.data[setID][nextSymbol]; !has {
+        s.data[setID][nextSymbol] = tools.NewSet[earleySituation]()
+    }
+    if s.data[setID][nextSymbol].Insert(situation) {
+        s.size++
+        return true
+    }
+    return false
+}
+
+func (s *situationSet) Get(setID int, nextSymbol byte) tools.Set[earleySituation] {
+    return s.GetMappedSet(setID)[nextSymbol]
+}
+
+func (s *situationSet) GetMappedSet(setID int) map[byte]tools.Set[earleySituation] {
+    return s.data[setID]
+}
+
+type earleySituation struct {
     Rule    *cf.Rule
     RulePos int
     WordPos int
@@ -121,60 +180,60 @@ type Situation struct {
 		u, v words consists of terminals and non-terminals
 */
 
-func ParseRule(rule *cf.Rule, position int) Situation {
+func parseRule(rule *cf.Rule, position int) earleySituation {
     /*
     	Input:  (A -> u), i
     	Output: (A -> .u, i)
     */
-    return Situation{
+    return earleySituation{
         Rule:    rule,
         RulePos: 0,
         WordPos: position,
     }
 }
 
-func InitSituation(g *cf.Grammar) Situation {
+func initSituation(g *cf.Grammar) earleySituation {
     /*
     	Returns (S' -> .S , 0)
     */
-    return Situation{
+    return earleySituation{
         Rule:    &g.Rules[0],
         RulePos: 0,
         WordPos: 0,
     }
 }
 
-func FinalSituation(g *cf.Grammar) Situation {
+func finalSituation(g *cf.Grammar) earleySituation {
     /*
     	Input:  w
     	Returns (S' -> S. , 0)
     */
-    return Situation{
+    return earleySituation{
         Rule:    &g.Rules[0],
         RulePos: 1,
         WordPos: 0,
     }
 }
 
-func (s Situation) NextPos() int {
+func (s earleySituation) NextPos() int {
     /*
        (A -> u.v , i) => i
     */
     return s.WordPos
 }
 
-func (s Situation) Next() byte {
+func (s earleySituation) Next() byte {
     /*
     	If s like (A -> u.xv, i) returns x
     	If s like (A -> u.  , i) returns nil
     */
     if s.Finished() {
-        return byte(0)
+        return endOfString
     }
     return s.Rule.Right[s.RulePos]
 }
 
-func (s Situation) ReadNext() Situation {
+func (s earleySituation) ReadNext() earleySituation {
     /*
     	(A -> u.xv, i) => (A -> ux.v, i)
     */
@@ -185,7 +244,7 @@ func (s Situation) ReadNext() Situation {
     return ret
 }
 
-func (s Situation) Finished() bool {
+func (s earleySituation) Finished() bool {
     /*
     	If s like (A -> u. , i) returns true
     	If s like (A -> u.w, i) returns false
