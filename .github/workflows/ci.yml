@@ -26,7 +26,7 @@ jobs:
         run: go test mipt_formal/auto/internal/modify -coverprofile="auto_out.cov"
       - name: Tests with coverage for gram
         run: go test mipt_formal/gram/internal/cf -coverprofile="gram_out.cov"
-      - name: Tests with coverage for CYK
+      - name: Tests with coverage for Parsers
         run: go test mipt_formal/gram/internal/parsers -coverprofile="cyk_out.cov"
       - name: Tests with coverage for Chomsky Normalization
         run: go test mipt_formal/gram/internal/modify -coverprofile="cyk_out.cov"
